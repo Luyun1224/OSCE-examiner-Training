@@ -1,0 +1,594 @@
+<!DOCTYPE html>
+<html lang="zh-TW">
+<head>
+    <meta charset="UTF-8">
+    <meta name="viewport" content="width=device-width, initial-scale=1.0">
+    <title>OSCE 新進考官新訓 - 成長與回饋問卷</title>
+    <script src="https://cdn.tailwindcss.com"></script>
+    <link href="https://fonts.googleapis.com/css2?family=Noto+Sans+TC:wght@300;400;500;700&display=swap" rel="stylesheet">
+    <script src="https://cdnjs.cloudflare.com/ajax/libs/font-awesome/6.4.0/js/all.min.js"></script>
+    <style>
+        body {
+            font-family: 'Noto Sans TC', sans-serif;
+            background-color: #f0f4f8;
+        }
+        .deep-blue-bg {
+            background-color: #1e3a8a; /* Tailwind blue-900 equivalent */
+        }
+        .deep-blue-text {
+            color: #1e3a8a;
+        }
+        .slider-thumb::-webkit-slider-thumb {
+            -webkit-appearance: none;
+            appearance: none;
+            width: 20px;
+            height: 20px;
+            background: #1e3a8a;
+            cursor: pointer;
+            border-radius: 50%;
+            margin-top: -8px; /* Corrects vertical alignment */
+        }
+        .range-track {
+            height: 4px; /* Thinner track */
+            background: #cbd5e1;
+            border-radius: 2px;
+        }
+        /* Custom radio button style */
+        .custom-radio:checked + label {
+            background-color: #1e3a8a;
+            color: white;
+            border-color: #1e3a8a;
+        }
+        /* 1-10 Scale Marks */
+        .scale-mark {
+            position: relative;
+            display: inline-block;
+            text-align: center;
+            width: 9%;
+        }
+        .scale-mark::before {
+            content: '';
+            display: block;
+            height: 4px;
+            width: 1px;
+            background: #94a3b8;
+            margin: 0 auto 4px;
+        }
+        /* Loading Overlay */
+        .loading-overlay {
+            position: fixed;
+            top: 0;
+            left: 0;
+            width: 100%;
+            height: 100%;
+            background: rgba(255, 255, 255, 0.8);
+            z-index: 100;
+            display: none;
+            justify-content: center;
+            align-items: center;
+            flex-direction: column;
+        }
+        .spinner {
+            border: 4px solid #f3f3f3;
+            border-top: 4px solid #1e3a8a;
+            border-radius: 50%;
+            width: 40px;
+            height: 40px;
+            animation: spin 1s linear infinite;
+        }
+        @keyframes spin {
+            0% { transform: rotate(0deg); }
+            100% { transform: rotate(360deg); }
+        }
+    </style>
+</head>
+<body class="text-gray-700">
+
+    <!-- Loading Overlay -->
+    <div id="loadingOverlay" class="loading-overlay">
+        <div class="spinner mb-4"></div>
+        <p class="text-blue-900 font-bold">資料傳送中，請稍候...</p>
+    </div>
+
+    <!-- Header Section -->
+    <header class="deep-blue-bg text-white shadow-lg relative overflow-hidden">
+        <div class="absolute top-0 left-0 w-full h-full opacity-10">
+            <i class="fa-solid fa-user-doctor absolute top-10 left-10 text-9xl"></i>
+            <i class="fa-solid fa-clipboard-check absolute bottom-10 right-10 text-9xl"></i>
+        </div>
+        <div class="container mx-auto px-6 py-10 relative z-10 text-center">
+            <div class="mb-4 inline-block bg-white/20 px-4 py-1 rounded-full text-sm backdrop-blur-sm">
+                <i class="fa-solid fa-seedling mr-2"></i>醫學教育傳承之旅
+            </div>
+            <h1 class="text-3xl md:text-4xl font-bold mb-4 tracking-wide">OSCE 考官新訓・成長回饋問卷</h1>
+            <p class="text-blue-100 max-w-2xl mx-auto text-lg font-light leading-relaxed">
+                親愛的準考官您好，歡迎加入醫學教育的大家庭。<br>
+                今天是您第一次接觸考官訓練，我們非常重視您的「學習曲線」與感受。<br>
+                請協助我們填寫這份回饋，讓我們一起為了台灣的醫學教育變得更好。
+            </p>
+        </div>
+    </header>
+
+    <div class="container mx-auto px-4 py-8 max-w-4xl">
+        <!-- Added novalidate to handle validation via JS -->
+        <form id="feedbackForm" method="POST" novalidate>
+            
+            <!-- Section 1: User Info (Minimal) -->
+            <div class="bg-white rounded-2xl shadow-sm p-6 mb-8 border-l-8 border-blue-900">
+                <h2 class="text-xl font-bold deep-blue-text mb-4 flex items-center">
+                    <i class="fa-solid fa-id-card mr-3"></i> 基本資料
+                </h2>
+                <div class="grid grid-cols-1 md:grid-cols-2 gap-6">
+                    <div>
+                        <label class="block text-sm font-medium text-gray-600 mb-2">職類 / 科別 <span class="text-red-500">*</span></label>
+                        <select name="profession" class="w-full px-4 py-2 rounded-lg border border-gray-300 focus:outline-none focus:ring-2 focus:ring-blue-900/50 bg-gray-50" required>
+                            <option value="" disabled selected>請選擇職類</option>
+                            <optgroup label="醫師職類">
+                                <option value="西醫">西醫</option>
+                                <option value="牙醫">牙醫</option>
+                                <option value="中醫">中醫</option>
+                            </optgroup>
+                            <optgroup label="醫事職類">
+                                <option value="藥事">藥事</option>
+                                <option value="醫事放射">醫事放射</option>
+                                <option value="醫事檢驗">醫事檢驗</option>
+                                <option value="護理">護理</option>
+                                <option value="營養">營養</option>
+                                <option value="呼吸治療">呼吸治療</option>
+                                <option value="聽力">聽力</option>
+                                <option value="物理治療">物理治療</option>
+                                <option value="職能治療">職能治療</option>
+                                <option value="臨床心理">臨床心理</option>
+                                <option value="語言治療">語言治療</option>
+                                <option value="專科護理師">專科護理師</option>
+                                <option value="其他">其他</option>
+                            </optgroup>
+                        </select>
+                    </div>
+                    <div>
+                        <label class="block text-sm font-medium text-gray-600 mb-2">服務年資 <span class="text-red-500">*</span></label>
+                        <select name="years" class="w-full px-4 py-2 rounded-lg border border-gray-300 focus:outline-none focus:ring-2 focus:ring-blue-900/50 bg-gray-50" required>
+                            <option value="" disabled selected>請選擇</option>
+                            <option value="1-5 年">1-5 年</option>
+                            <option value="6-10 年">6-10 年</option>
+                            <option value="10 年以上">10 年以上</option>
+                        </select>
+                    </div>
+                </div>
+            </div>
+
+            <!-- Section 2: The Learning Curve -->
+            <div id="learningCurveSection" class="bg-white rounded-2xl shadow-sm p-6 mb-8">
+                <div class="flex items-center justify-between mb-6 border-b pb-4">
+                    <h2 class="text-xl font-bold deep-blue-text flex items-center">
+                        <i class="fa-solid fa-chart-line mr-3"></i> 學習曲線與自我效能
+                    </h2>
+                    <span class="text-xs bg-blue-100 text-blue-800 px-3 py-1 rounded-full">核心架構</span>
+                </div>
+                
+                <p class="text-sm text-gray-500 mb-6 bg-gray-50 p-3 rounded-lg border border-gray-200">
+                    <i class="fa-solid fa-circle-info mr-1 text-blue-900"></i> 
+                    請回想**「參加工作坊之前」**與**「現在」**的差異，評估您對以下考官職能的信心程度。<br>
+                    (1分：非常陌生/沒信心 ⮕ 5分：完全掌握/非常有信心) <span class="text-red-500 text-xs ml-2">* 為必填</span>
+                </p>
+
+                <!-- Learning Item 1 -->
+                <div class="mb-8 group">
+                    <h3 class="font-semibold text-lg text-gray-800 mb-3 pl-2 border-l-4 border-blue-300">1. OSCE 基本概念</h3>
+                    <div class="grid grid-cols-1 md:grid-cols-2 gap-4 bg-blue-50/50 p-4 rounded-xl">
+                        <!-- Before -->
+                        <div class="text-center">
+                            <label class="block text-xs font-bold text-gray-400 mb-2 uppercase tracking-wide">受訓前</label>
+                            <div class="flex justify-center space-x-1">
+                                <input type="radio" name="q1_pre" value="1" class="sr-only custom-radio" id="q1_pre_1"><label for="q1_pre_1" class="w-8 h-8 rounded-full border border-gray-300 flex items-center justify-center cursor-pointer hover:bg-gray-100">1</label>
+                                <input type="radio" name="q1_pre" value="2" class="sr-only custom-radio" id="q1_pre_2"><label for="q1_pre_2" class="w-8 h-8 rounded-full border border-gray-300 flex items-center justify-center cursor-pointer hover:bg-gray-100">2</label>
+                                <input type="radio" name="q1_pre" value="3" class="sr-only custom-radio" id="q1_pre_3"><label for="q1_pre_3" class="w-8 h-8 rounded-full border border-gray-300 flex items-center justify-center cursor-pointer hover:bg-gray-100">3</label>
+                                <input type="radio" name="q1_pre" value="4" class="sr-only custom-radio" id="q1_pre_4"><label for="q1_pre_4" class="w-8 h-8 rounded-full border border-gray-300 flex items-center justify-center cursor-pointer hover:bg-gray-100">4</label>
+                                <input type="radio" name="q1_pre" value="5" class="sr-only custom-radio" id="q1_pre_5"><label for="q1_pre_5" class="w-8 h-8 rounded-full border border-gray-300 flex items-center justify-center cursor-pointer hover:bg-gray-100">5</label>
+                            </div>
+                        </div>
+                        <!-- After -->
+                        <div class="text-center">
+                            <label class="block text-xs font-bold deep-blue-text mb-2 uppercase tracking-wide">受訓後</label>
+                            <div class="flex justify-center space-x-1">
+                                <input type="radio" name="q1_post" value="1" class="sr-only custom-radio" id="q1_post_1"><label for="q1_post_1" class="w-8 h-8 rounded-full border border-blue-900 text-blue-900 flex items-center justify-center cursor-pointer hover:bg-blue-50">1</label>
+                                <input type="radio" name="q1_post" value="2" class="sr-only custom-radio" id="q1_post_2"><label for="q1_post_2" class="w-8 h-8 rounded-full border border-blue-900 text-blue-900 flex items-center justify-center cursor-pointer hover:bg-blue-50">2</label>
+                                <input type="radio" name="q1_post" value="3" class="sr-only custom-radio" id="q1_post_3"><label for="q1_post_3" class="w-8 h-8 rounded-full border border-blue-900 text-blue-900 flex items-center justify-center cursor-pointer hover:bg-blue-50">3</label>
+                                <input type="radio" name="q1_post" value="4" class="sr-only custom-radio" id="q1_post_4"><label for="q1_post_4" class="w-8 h-8 rounded-full border border-blue-900 text-blue-900 flex items-center justify-center cursor-pointer hover:bg-blue-50">4</label>
+                                <input type="radio" name="q1_post" value="5" class="sr-only custom-radio" id="q1_post_5"><label for="q1_post_5" class="w-8 h-8 rounded-full border border-blue-900 text-blue-900 flex items-center justify-center cursor-pointer hover:bg-blue-50">5</label>
+                            </div>
+                        </div>
+                    </div>
+                </div>
+
+                 <!-- Learning Item 2 -->
+                 <div class="mb-8 group">
+                    <h3 class="font-semibold text-lg text-gray-800 mb-3 pl-2 border-l-4 border-blue-300">2. 台灣國考 OSCE 現況</h3>
+                    <div class="grid grid-cols-1 md:grid-cols-2 gap-4 bg-blue-50/50 p-4 rounded-xl">
+                        <!-- Before -->
+                        <div class="text-center">
+                            <label class="block text-xs font-bold text-gray-400 mb-2 uppercase">受訓前</label>
+                            <div class="flex justify-center space-x-1">
+                                <input type="radio" name="q2_pre" value="1" class="sr-only custom-radio" id="q2_pre_1"><label for="q2_pre_1" class="w-8 h-8 rounded-full border border-gray-300 flex items-center justify-center cursor-pointer hover:bg-gray-100">1</label>
+                                <input type="radio" name="q2_pre" value="2" class="sr-only custom-radio" id="q2_pre_2"><label for="q2_pre_2" class="w-8 h-8 rounded-full border border-gray-300 flex items-center justify-center cursor-pointer hover:bg-gray-100">2</label>
+                                <input type="radio" name="q2_pre" value="3" class="sr-only custom-radio" id="q2_pre_3"><label for="q2_pre_3" class="w-8 h-8 rounded-full border border-gray-300 flex items-center justify-center cursor-pointer hover:bg-gray-100">3</label>
+                                <input type="radio" name="q2_pre" value="4" class="sr-only custom-radio" id="q2_pre_4"><label for="q2_pre_4" class="w-8 h-8 rounded-full border border-gray-300 flex items-center justify-center cursor-pointer hover:bg-gray-100">4</label>
+                                <input type="radio" name="q2_pre" value="5" class="sr-only custom-radio" id="q2_pre_5"><label for="q2_pre_5" class="w-8 h-8 rounded-full border border-gray-300 flex items-center justify-center cursor-pointer hover:bg-gray-100">5</label>
+                            </div>
+                        </div>
+                        <!-- After -->
+                        <div class="text-center">
+                            <label class="block text-xs font-bold deep-blue-text mb-2 uppercase">受訓後</label>
+                            <div class="flex justify-center space-x-1">
+                                <input type="radio" name="q2_post" value="1" class="sr-only custom-radio" id="q2_post_1"><label for="q2_post_1" class="w-8 h-8 rounded-full border border-blue-900 text-blue-900 flex items-center justify-center cursor-pointer hover:bg-blue-50">1</label>
+                                <input type="radio" name="q2_post" value="2" class="sr-only custom-radio" id="q2_post_2"><label for="q2_post_2" class="w-8 h-8 rounded-full border border-blue-900 text-blue-900 flex items-center justify-center cursor-pointer hover:bg-blue-50">2</label>
+                                <input type="radio" name="q2_post" value="3" class="sr-only custom-radio" id="q2_post_3"><label for="q2_post_3" class="w-8 h-8 rounded-full border border-blue-900 text-blue-900 flex items-center justify-center cursor-pointer hover:bg-blue-50">3</label>
+                                <input type="radio" name="q2_post" value="4" class="sr-only custom-radio" id="q2_post_4"><label for="q2_post_4" class="w-8 h-8 rounded-full border border-blue-900 text-blue-900 flex items-center justify-center cursor-pointer hover:bg-blue-50">4</label>
+                                <input type="radio" name="q2_post" value="5" class="sr-only custom-radio" id="q2_post_5"><label for="q2_post_5" class="w-8 h-8 rounded-full border border-blue-900 text-blue-900 flex items-center justify-center cursor-pointer hover:bg-blue-50">5</label>
+                            </div>
+                        </div>
+                    </div>
+                </div>
+
+                <!-- Learning Item 3 -->
+                <div class="mb-8 group">
+                    <h3 class="font-semibold text-lg text-gray-800 mb-3 pl-2 border-l-4 border-blue-300">3. OSCE 整體規劃與評分共識</h3>
+                    <div class="grid grid-cols-1 md:grid-cols-2 gap-4 bg-blue-50/50 p-4 rounded-xl">
+                        <!-- Before -->
+                        <div class="text-center">
+                            <label class="block text-xs font-bold text-gray-400 mb-2 uppercase">受訓前</label>
+                            <div class="flex justify-center space-x-1">
+                                <input type="radio" name="q3_pre" value="1" class="sr-only custom-radio" id="q3_pre_1"><label for="q3_pre_1" class="w-8 h-8 rounded-full border border-gray-300 flex items-center justify-center cursor-pointer hover:bg-gray-100">1</label>
+                                <input type="radio" name="q3_pre" value="2" class="sr-only custom-radio" id="q3_pre_2"><label for="q3_pre_2" class="w-8 h-8 rounded-full border border-gray-300 flex items-center justify-center cursor-pointer hover:bg-gray-100">2</label>
+                                <input type="radio" name="q3_pre" value="3" class="sr-only custom-radio" id="q3_pre_3"><label for="q3_pre_3" class="w-8 h-8 rounded-full border border-gray-300 flex items-center justify-center cursor-pointer hover:bg-gray-100">3</label>
+                                <input type="radio" name="q3_pre" value="4" class="sr-only custom-radio" id="q3_pre_4"><label for="q3_pre_4" class="w-8 h-8 rounded-full border border-gray-300 flex items-center justify-center cursor-pointer hover:bg-gray-100">4</label>
+                                <input type="radio" name="q3_pre" value="5" class="sr-only custom-radio" id="q3_pre_5"><label for="q3_pre_5" class="w-8 h-8 rounded-full border border-gray-300 flex items-center justify-center cursor-pointer hover:bg-gray-100">5</label>
+                            </div>
+                        </div>
+                        <!-- After -->
+                        <div class="text-center">
+                            <label class="block text-xs font-bold deep-blue-text mb-2 uppercase">受訓後</label>
+                            <div class="flex justify-center space-x-1">
+                                <input type="radio" name="q3_post" value="1" class="sr-only custom-radio" id="q3_post_1"><label for="q3_post_1" class="w-8 h-8 rounded-full border border-blue-900 text-blue-900 flex items-center justify-center cursor-pointer hover:bg-blue-50">1</label>
+                                <input type="radio" name="q3_post" value="2" class="sr-only custom-radio" id="q3_post_2"><label for="q3_post_2" class="w-8 h-8 rounded-full border border-blue-900 text-blue-900 flex items-center justify-center cursor-pointer hover:bg-blue-50">2</label>
+                                <input type="radio" name="q3_post" value="3" class="sr-only custom-radio" id="q3_post_3"><label for="q3_post_3" class="w-8 h-8 rounded-full border border-blue-900 text-blue-900 flex items-center justify-center cursor-pointer hover:bg-blue-50">3</label>
+                                <input type="radio" name="q3_post" value="4" class="sr-only custom-radio" id="q3_post_4"><label for="q3_post_4" class="w-8 h-8 rounded-full border border-blue-900 text-blue-900 flex items-center justify-center cursor-pointer hover:bg-blue-50">4</label>
+                                <input type="radio" name="q3_post" value="5" class="sr-only custom-radio" id="q3_post_5"><label for="q3_post_5" class="w-8 h-8 rounded-full border border-blue-900 text-blue-900 flex items-center justify-center cursor-pointer hover:bg-blue-50">5</label>
+                            </div>
+                        </div>
+                    </div>
+                </div>
+
+                <!-- Learning Item 4 -->
+                <div class="mb-8 group">
+                    <h3 class="font-semibold text-lg text-gray-800 mb-3 pl-2 border-l-4 border-blue-300">4. 評分表解讀與及格標準</h3>
+                    <div class="grid grid-cols-1 md:grid-cols-2 gap-4 bg-blue-50/50 p-4 rounded-xl">
+                        <!-- Before -->
+                        <div class="text-center">
+                            <label class="block text-xs font-bold text-gray-400 mb-2 uppercase">受訓前</label>
+                            <div class="flex justify-center space-x-1">
+                                <input type="radio" name="q4_pre" value="1" class="sr-only custom-radio" id="q4_pre_1"><label for="q4_pre_1" class="w-8 h-8 rounded-full border border-gray-300 flex items-center justify-center cursor-pointer hover:bg-gray-100">1</label>
+                                <input type="radio" name="q4_pre" value="2" class="sr-only custom-radio" id="q4_pre_2"><label for="q4_pre_2" class="w-8 h-8 rounded-full border border-gray-300 flex items-center justify-center cursor-pointer hover:bg-gray-100">2</label>
+                                <input type="radio" name="q4_pre" value="3" class="sr-only custom-radio" id="q4_pre_3"><label for="q4_pre_3" class="w-8 h-8 rounded-full border border-gray-300 flex items-center justify-center cursor-pointer hover:bg-gray-100">3</label>
+                                <input type="radio" name="q4_pre" value="4" class="sr-only custom-radio" id="q4_pre_4"><label for="q4_pre_4" class="w-8 h-8 rounded-full border border-gray-300 flex items-center justify-center cursor-pointer hover:bg-gray-100">4</label>
+                                <input type="radio" name="q4_pre" value="5" class="sr-only custom-radio" id="q4_pre_5"><label for="q4_pre_5" class="w-8 h-8 rounded-full border border-gray-300 flex items-center justify-center cursor-pointer hover:bg-gray-100">5</label>
+                            </div>
+                        </div>
+                        <!-- After -->
+                        <div class="text-center">
+                            <label class="block text-xs font-bold deep-blue-text mb-2 uppercase">受訓後</label>
+                            <div class="flex justify-center space-x-1">
+                                <input type="radio" name="q4_post" value="1" class="sr-only custom-radio" id="q4_post_1"><label for="q4_post_1" class="w-8 h-8 rounded-full border border-blue-900 text-blue-900 flex items-center justify-center cursor-pointer hover:bg-blue-50">1</label>
+                                <input type="radio" name="q4_post" value="2" class="sr-only custom-radio" id="q4_post_2"><label for="q4_post_2" class="w-8 h-8 rounded-full border border-blue-900 text-blue-900 flex items-center justify-center cursor-pointer hover:bg-blue-50">2</label>
+                                <input type="radio" name="q4_post" value="3" class="sr-only custom-radio" id="q4_post_3"><label for="q4_post_3" class="w-8 h-8 rounded-full border border-blue-900 text-blue-900 flex items-center justify-center cursor-pointer hover:bg-blue-50">3</label>
+                                <input type="radio" name="q4_post" value="4" class="sr-only custom-radio" id="q4_post_4"><label for="q4_post_4" class="w-8 h-8 rounded-full border border-blue-900 text-blue-900 flex items-center justify-center cursor-pointer hover:bg-blue-50">4</label>
+                                <input type="radio" name="q4_post" value="5" class="sr-only custom-radio" id="q4_post_5"><label for="q4_post_5" class="w-8 h-8 rounded-full border border-blue-900 text-blue-900 flex items-center justify-center cursor-pointer hover:bg-blue-50">5</label>
+                            </div>
+                        </div>
+                    </div>
+                </div>
+
+                <!-- Learning Item 5 -->
+                <div class="mb-4 group">
+                    <h3 class="font-semibold text-lg text-gray-800 mb-3 pl-2 border-l-4 border-blue-300">5. 考場突發狀況應變</h3>
+                    <div class="grid grid-cols-1 md:grid-cols-2 gap-4 bg-blue-50/50 p-4 rounded-xl">
+                        <!-- Before -->
+                        <div class="text-center">
+                            <label class="block text-xs font-bold text-gray-400 mb-2 uppercase">受訓前</label>
+                            <div class="flex justify-center space-x-1">
+                                <input type="radio" name="q5_pre" value="1" class="sr-only custom-radio" id="q5_pre_1"><label for="q5_pre_1" class="w-8 h-8 rounded-full border border-gray-300 flex items-center justify-center cursor-pointer hover:bg-gray-100">1</label>
+                                <input type="radio" name="q5_pre" value="2" class="sr-only custom-radio" id="q5_pre_2"><label for="q5_pre_2" class="w-8 h-8 rounded-full border border-gray-300 flex items-center justify-center cursor-pointer hover:bg-gray-100">2</label>
+                                <input type="radio" name="q5_pre" value="3" class="sr-only custom-radio" id="q5_pre_3"><label for="q5_pre_3" class="w-8 h-8 rounded-full border border-gray-300 flex items-center justify-center cursor-pointer hover:bg-gray-100">3</label>
+                                <input type="radio" name="q5_pre" value="4" class="sr-only custom-radio" id="q5_pre_4"><label for="q5_pre_4" class="w-8 h-8 rounded-full border border-gray-300 flex items-center justify-center cursor-pointer hover:bg-gray-100">4</label>
+                                <input type="radio" name="q5_pre" value="5" class="sr-only custom-radio" id="q5_pre_5"><label for="q5_pre_5" class="w-8 h-8 rounded-full border border-gray-300 flex items-center justify-center cursor-pointer hover:bg-gray-100">5</label>
+                            </div>
+                        </div>
+                        <!-- After -->
+                        <div class="text-center">
+                            <label class="block text-xs font-bold deep-blue-text mb-2 uppercase">受訓後</label>
+                            <div class="flex justify-center space-x-1">
+                                <input type="radio" name="q5_post" value="1" class="sr-only custom-radio" id="q5_post_1"><label for="q5_post_1" class="w-8 h-8 rounded-full border border-blue-900 text-blue-900 flex items-center justify-center cursor-pointer hover:bg-blue-50">1</label>
+                                <input type="radio" name="q5_post" value="2" class="sr-only custom-radio" id="q5_post_2"><label for="q5_post_2" class="w-8 h-8 rounded-full border border-blue-900 text-blue-900 flex items-center justify-center cursor-pointer hover:bg-blue-50">2</label>
+                                <input type="radio" name="q5_post" value="3" class="sr-only custom-radio" id="q5_post_3"><label for="q5_post_3" class="w-8 h-8 rounded-full border border-blue-900 text-blue-900 flex items-center justify-center cursor-pointer hover:bg-blue-50">3</label>
+                                <input type="radio" name="q5_post" value="4" class="sr-only custom-radio" id="q5_post_4"><label for="q5_post_4" class="w-8 h-8 rounded-full border border-blue-900 text-blue-900 flex items-center justify-center cursor-pointer hover:bg-blue-50">4</label>
+                                <input type="radio" name="q5_post" value="5" class="sr-only custom-radio" id="q5_post_5"><label for="q5_post_5" class="w-8 h-8 rounded-full border border-blue-900 text-blue-900 flex items-center justify-center cursor-pointer hover:bg-blue-50">5</label>
+                            </div>
+                        </div>
+                    </div>
+                </div>
+            </div>
+
+            <!-- Section 3: Atmosphere & Satisfaction (1-10 Scale) -->
+            <div class="bg-white rounded-2xl shadow-sm p-6 mb-8">
+                <div class="flex items-center justify-between mb-6 border-b pb-4">
+                    <h2 class="text-xl font-bold deep-blue-text flex items-center">
+                        <i class="fa-solid fa-heart mr-3"></i> 訓練體驗與共好氛圍
+                    </h2>
+                    <span class="text-xs bg-blue-100 text-blue-800 px-3 py-1 rounded-full">1-10 分評價</span>
+                </div>
+
+                <div class="space-y-8">
+                    <!-- Q1 -->
+                    <div>
+                        <p class="font-medium mb-3 text-lg">1. 課程內容的編排邏輯清晰，容易吸收。</p>
+                        <div class="flex items-center space-x-4 mb-2">
+                            <span class="text-xs text-gray-400 w-12 text-right">不同意 (1)</span>
+                            <div class="relative w-full">
+                                <input type="range" name="sat_q1" min="1" max="10" value="8" class="w-full h-2 rounded-lg appearance-none cursor-pointer range-track slider-thumb" oninput="this.nextElementSibling.value = this.value">
+                                <output class="absolute top-6 left-1/2 transform -translate-x-1/2 text-sm font-bold text-blue-900">8</output>
+                            </div>
+                            <span class="text-xs text-gray-400 w-12">同意 (10)</span>
+                        </div>
+                    </div>
+                    
+                    <!-- Q2 -->
+                    <div>
+                        <p class="font-medium mb-3 text-lg">2. 講師能營造「一起學習」的溫馨氣氛，減緩我初次擔任考官的焦慮。</p>
+                        <div class="flex items-center space-x-4 mb-2">
+                            <span class="text-xs text-gray-400 w-12 text-right">不同意 (1)</span>
+                            <div class="relative w-full">
+                                <input type="range" name="sat_q2" min="1" max="10" value="8" class="w-full h-2 rounded-lg appearance-none cursor-pointer range-track slider-thumb" oninput="this.nextElementSibling.value = this.value">
+                                <output class="absolute top-6 left-1/2 transform -translate-x-1/2 text-sm font-bold text-blue-900">8</output>
+                            </div>
+                            <span class="text-xs text-gray-400 w-12">同意 (10)</span>
+                        </div>
+                    </div>
+
+                    <!-- Q3 -->
+                    <div>
+                        <p class="font-medium mb-3 text-lg">3. 整體而言，我有信心勝任接下來的 OSCE 考官任務。</p>
+                        <div class="flex items-center space-x-4 mb-2">
+                            <span class="text-xs text-gray-400 w-12 text-right">沒信心 (1)</span>
+                            <div class="relative w-full">
+                                <input type="range" name="sat_q3" min="1" max="10" value="8" class="w-full h-2 rounded-lg appearance-none cursor-pointer range-track slider-thumb" oninput="this.nextElementSibling.value = this.value">
+                                <output class="absolute top-6 left-1/2 transform -translate-x-1/2 text-sm font-bold text-blue-900">8</output>
+                            </div>
+                            <span class="text-xs text-gray-400 w-12">有信心 (10)</span>
+                        </div>
+                    </div>
+                </div>
+            </div>
+
+            <!-- New Section: Hardware & Environment -->
+            <div class="bg-white rounded-2xl shadow-sm p-6 mb-8 border-t-4 border-gray-200">
+                <div class="flex items-center justify-between mb-6 border-b pb-4">
+                    <h2 class="text-xl font-bold deep-blue-text flex items-center">
+                        <i class="fa-solid fa-building-columns mr-3"></i> 行政支持與硬體環境
+                    </h2>
+                    <span class="text-xs bg-gray-100 text-gray-600 px-3 py-1 rounded-full">1-10 分評價</span>
+                </div>
+
+                <div class="space-y-8">
+                     <!-- HW Q1 -->
+                    <div>
+                        <p class="font-medium mb-3 text-lg">1. 訓練場地的空間舒適度（如：燈光、空調、動線）。</p>
+                        <div class="flex items-center space-x-4 mb-2">
+                            <span class="text-xs text-gray-400 w-12 text-right">不滿意 (1)</span>
+                            <div class="relative w-full">
+                                <input type="range" name="env_q1" min="1" max="10" value="8" class="w-full h-2 rounded-lg appearance-none cursor-pointer range-track slider-thumb" oninput="this.nextElementSibling.value = this.value">
+                                <output class="absolute top-6 left-1/2 transform -translate-x-1/2 text-sm font-bold text-blue-900">8</output>
+                            </div>
+                            <span class="text-xs text-gray-400 w-12">滿意 (10)</span>
+                        </div>
+                    </div>
+
+                    <!-- HW Q2 -->
+                     <div>
+                        <p class="font-medium mb-3 text-lg">2. 硬體設備的運作品質（如：麥克風音量、投影清晰度、網路連線）。</p>
+                        <div class="flex items-center space-x-4 mb-2">
+                            <span class="text-xs text-gray-400 w-12 text-right">不滿意 (1)</span>
+                            <div class="relative w-full">
+                                <input type="range" name="env_q2" min="1" max="10" value="8" class="w-full h-2 rounded-lg appearance-none cursor-pointer range-track slider-thumb" oninput="this.nextElementSibling.value = this.value">
+                                <output class="absolute top-6 left-1/2 transform -translate-x-1/2 text-sm font-bold text-blue-900">8</output>
+                            </div>
+                            <span class="text-xs text-gray-400 w-12">滿意 (10)</span>
+                        </div>
+                    </div>
+
+                     <!-- HW Q3 -->
+                     <div>
+                        <p class="font-medium mb-3 text-lg">3. 提供的教材資料（講義或數位檔案）清晰易讀。</p>
+                        <div class="flex items-center space-x-4 mb-2">
+                            <span class="text-xs text-gray-400 w-12 text-right">不同意 (1)</span>
+                            <div class="relative w-full">
+                                <input type="range" name="env_q3" min="1" max="10" value="8" class="w-full h-2 rounded-lg appearance-none cursor-pointer range-track slider-thumb" oninput="this.nextElementSibling.value = this.value">
+                                <output class="absolute top-6 left-1/2 transform -translate-x-1/2 text-sm font-bold text-blue-900">8</output>
+                            </div>
+                            <span class="text-xs text-gray-400 w-12">同意 (10)</span>
+                        </div>
+                    </div>
+                </div>
+            </div>
+
+            <!-- Section 4: Open Ended -->
+            <div class="bg-white rounded-2xl shadow-sm p-6 mb-8">
+                <h2 class="text-xl font-bold deep-blue-text mb-6 flex items-center">
+                    <i class="fa-solid fa-comments mr-3"></i> 您的聲音 (與我們一起成長)
+                </h2>
+                
+                <div class="mb-4">
+                    <label class="block font-medium mb-2">今天最讓您感到「安心」或「有收穫」的一個環節是？</label>
+                    <textarea name="open_q1" class="w-full p-4 rounded-lg border border-gray-200 bg-gray-50 focus:outline-none focus:ring-2 focus:ring-blue-900/50 h-24" placeholder="例如：講師分享的實際評分案例..."></textarea>
+                </div>
+
+                <div>
+                    <label class="block font-medium mb-2">對於未來的考官訓練，您有什麼建議或想了解更多的主題？</label>
+                    <textarea name="open_q2" class="w-full p-4 rounded-lg border border-gray-200 bg-gray-50 focus:outline-none focus:ring-2 focus:ring-blue-900/50 h-24" placeholder="您的建議是我們進步的動力..."></textarea>
+                </div>
+            </div>
+
+            <!-- Submit -->
+            <div class="text-center">
+                <button type="submit" class="deep-blue-bg text-white font-bold py-4 px-12 rounded-full shadow-lg hover:shadow-xl transform hover:-translate-y-1 transition duration-300 text-lg flex items-center mx-auto cursor-pointer">
+                    <i class="fa-solid fa-paper-plane mr-2"></i> 提交回饋
+                </button>
+                <p class="mt-4 text-sm text-gray-500">感謝您的付出，讓我們一起為醫學教育努力。</p>
+            </div>
+        </form>
+    </div>
+
+    <!-- Message/Error Modal -->
+    <div id="messageModal" class="fixed inset-0 bg-black bg-opacity-50 z-50 hidden flex items-center justify-center">
+        <div class="bg-white rounded-2xl p-8 max-w-md mx-4 text-center transform transition-all scale-100 shadow-2xl">
+            <div id="modalIcon" class="w-16 h-16 rounded-full flex items-center justify-center mx-auto mb-4 text-white text-2xl"></div>
+            <h3 id="modalTitle" class="text-xl font-bold text-gray-800 mb-2"></h3>
+            <p id="modalMessage" class="text-gray-600 mb-6 text-left"></p>
+            <button onclick="closeMessageModal()" class="w-full border-2 border-gray-300 text-gray-700 font-bold py-2 rounded-lg hover:bg-gray-50 transition">
+                關閉 / 了解
+            </button>
+        </div>
+    </div>
+
+    <!-- Success Modal -->
+    <div id="successModal" class="fixed inset-0 bg-black bg-opacity-50 z-50 hidden flex items-center justify-center">
+        <div class="bg-white rounded-2xl p-8 max-w-md mx-4 text-center transform transition-all scale-100 shadow-2xl">
+            <div class="w-20 h-20 deep-blue-bg rounded-full flex items-center justify-center mx-auto mb-6 text-white text-3xl">
+                <i class="fa-solid fa-check"></i>
+            </div>
+            <h3 class="text-2xl font-bold text-gray-800 mb-2">感謝您的回饋！</h3>
+            <p class="text-gray-600 mb-6">您的意見是我們前進的動力。<br>恭喜您完成 OSCE 考官新訓，<br>期待在考場上見到您專業的身影！</p>
+            <button onclick="closeModal()" class="w-full border-2 border-blue-900 text-blue-900 font-bold py-2 rounded-lg hover:bg-blue-50 transition">
+                關閉
+            </button>
+        </div>
+    </div>
+
+    <script>
+        // *** 請將您的 Apps Script 網址貼在下方引號中 ***
+        const scriptURL = 'https://script.google.com/macros/s/AKfycbxprqwW-XeHgCp3QpjApCTK7BJPnZqiZgx371AmY8ztM1Ac8VSM_gRVS5NIEqOWHMfcqQ/exec';
+
+        const form = document.getElementById('feedbackForm');
+        const loadingOverlay = document.getElementById('loadingOverlay');
+
+        // 通用訊息視窗函式
+        function showMessage(type, title, message) {
+            const modal = document.getElementById('messageModal');
+            const icon = document.getElementById('modalIcon');
+            const titleEl = document.getElementById('modalTitle');
+            const msgEl = document.getElementById('modalMessage');
+            
+            if (type === 'error') {
+                icon.className = "w-16 h-16 rounded-full flex items-center justify-center mx-auto mb-4 text-white text-2xl bg-red-500";
+                icon.innerHTML = '<i class="fa-solid fa-triangle-exclamation"></i>';
+            } else if (type === 'warning') {
+                icon.className = "w-16 h-16 rounded-full flex items-center justify-center mx-auto mb-4 text-white text-2xl bg-yellow-500";
+                icon.innerHTML = '<i class="fa-solid fa-circle-exclamation"></i>';
+            } else {
+                icon.className = "w-16 h-16 rounded-full flex items-center justify-center mx-auto mb-4 text-white text-2xl bg-blue-500";
+                icon.innerHTML = '<i class="fa-solid fa-info"></i>';
+            }
+            
+            titleEl.textContent = title;
+            msgEl.innerHTML = message; // Allow HTML for line breaks
+            modal.classList.remove('hidden');
+        }
+
+        function closeMessageModal() {
+            document.getElementById('messageModal').classList.add('hidden');
+        }
+
+        form.addEventListener('submit', e => {
+            // 重要：阻止表單預設送出行為，完全由 JS 控制
+            e.preventDefault();
+            
+            // 1. 檢查是否已設定 Apps Script 網址
+            if (scriptURL.includes("請貼在這裡") || scriptURL === "") {
+                showMessage('error', '尚未設定後端網址', '請回到 HTML 程式碼底部，將 <code>const scriptURL</code> 的內容替換為您部署好的 Google Apps Script 網址，才能啟用送出功能。');
+                return;
+            }
+
+            // 2. 手動驗證必填欄位
+            const profession = form.profession.value;
+            const years = form.years.value;
+            if(!profession || !years || years === "請選擇" || profession === "") {
+                 showMessage('warning', '基本資料未填寫完整', '請確認「基本資料」區塊的 <b>職類</b> 與 <b>年資</b> 皆已選擇，以便我們進行統計分析。');
+                // Scroll to top to show user where the fields are
+                window.scrollTo({ top: 0, behavior: 'smooth' });
+                return;
+            }
+
+            // 3. 驗證核心能力前後測 (Radio buttons)
+            // 定義所有需要檢查的 radio 群組名稱
+            const requiredRadios = [
+                'q1_pre', 'q1_post', 
+                'q2_pre', 'q2_post', 
+                'q3_pre', 'q3_post', 
+                'q4_pre', 'q4_post', 
+                'q5_pre', 'q5_post'
+            ];
+
+            let allRadiosFilled = true;
+            for (const name of requiredRadios) {
+                if (!form[name].value) {
+                    allRadiosFilled = false;
+                    break;
+                }
+            }
+
+            if (!allRadiosFilled) {
+                showMessage('warning', '部分評分未完成', '請確認「學習曲線與自我效能」區塊中，每一題的<b>「受訓前」</b>與<b>「受訓後」</b>評分皆已勾選。');
+                // 滾動到學習曲線區塊
+                const section2 = document.getElementById('learningCurveSection');
+                if(section2) section2.scrollIntoView({behavior: 'smooth'});
+                return;
+            }
+
+            // 4. 顯示讀取中遮罩
+            loadingOverlay.style.display = 'flex';
+
+            // 5. 準備資料 (解決 CORS 問題的關鍵：轉換為 URLSearchParams)
+            const formData = new FormData(form);
+            const data = new URLSearchParams();
+            for (const pair of formData) {
+                data.append(pair[0], pair[1]);
+            }
+
+            // 6. 送出資料 (使用 no-cors 模式)
+            fetch(scriptURL, {
+                method: 'POST',
+                body: data,
+                mode: 'no-cors' // 重要：避開瀏覽器跨域阻擋，強制送出
+            })
+            .then(() => {
+                // 在 no-cors 模式下，無論成功與否我們都無法讀取回應狀態
+                // 只要沒有跳到 catch，就假設傳送成功
+                loadingOverlay.style.display = 'none';
+                document.getElementById('successModal').classList.remove('hidden');
+            })
+            .catch(error => {
+                loadingOverlay.style.display = 'none';
+                showMessage('error', '傳送失敗', '連線發生錯誤，請稍後再試。<br>錯誤代碼: ' + error.message);
+            });
+        });
+
+        function closeModal() {
+            const modal = document.getElementById('successModal');
+            modal.classList.add('hidden');
+            form.reset();
+            // Reset visual sliders
+            document.querySelectorAll('output').forEach(o => o.value = 8);
+            window.scrollTo({ top: 0, behavior: 'smooth' });
+        }
+    </script>
+</body>
+</html>
