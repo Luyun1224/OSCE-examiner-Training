@@ -1,0 +1,793 @@
+<!DOCTYPE html>
+<html lang="zh-TW">
+<head>
+    <meta charset="UTF-8">
+    <meta name="viewport" content="width=device-width, initial-scale=1.0">
+    <title>奇美醫院 OSCE 考官培訓工作坊 - 成效分析儀表板</title>
+    
+    <!-- Tailwind CSS -->
+    <script src="https://cdn.tailwindcss.com"></script>
+    
+    <!-- Font Awesome (用於圖示) -->
+    <link rel="stylesheet" href="https://cdnjs.cloudflare.com/ajax/libs/font-awesome/6.4.0/css/all.min.css">
+
+    <!-- 關鍵修正：依序載入 React 相關依賴，確保穩定性 -->
+    <script src="https://cdnjs.cloudflare.com/ajax/libs/react/18.2.0/umd/react.production.min.js"></script>
+    <script src="https://cdnjs.cloudflare.com/ajax/libs/react-dom/18.2.0/umd/react-dom.production.min.js"></script>
+    <script src="https://cdnjs.cloudflare.com/ajax/libs/prop-types/15.8.1/prop-types.min.js"></script>
+    <script src="https://cdnjs.cloudflare.com/ajax/libs/recharts/2.10.3/Recharts.min.js"></script>
+    <script src="https://cdnjs.cloudflare.com/ajax/libs/babel-standalone/7.23.5/babel.min.js"></script>
+
+    <style>
+        /* 統一使用 Noto Sans TC */
+        @import url('https://fonts.googleapis.com/css2?family=Noto+Sans+TC:wght@400;500;700;900&display=swap');
+        
+        body {
+            font-family: 'Noto Sans TC', sans-serif;
+            background-color: #f8fafc; /* Slate-50 */
+        }
+        
+        /* 隱藏捲軸但保留功能 */
+        .custom-scrollbar::-webkit-scrollbar {
+            width: 6px;
+        }
+        .custom-scrollbar::-webkit-scrollbar-track {
+            background: #f1f1f1; 
+        }
+        .custom-scrollbar::-webkit-scrollbar-thumb {
+            background: #cbd5e1; 
+            border-radius: 3px;
+        }
+        .custom-scrollbar::-webkit-scrollbar-thumb:hover {
+            background: #94a3b8; 
+        }
+
+        /* 卡片懸浮效果增強 */
+        .hover-card {
+            transition: all 0.3s cubic-bezier(0.4, 0, 0.2, 1);
+        }
+        .hover-card:hover {
+            transform: translateY(-4px);
+            box-shadow: 0 10px 25px -5px rgba(0, 0, 0, 0.1), 0 8px 10px -6px rgba(0, 0, 0, 0.1);
+        }
+    </style>
+</head>
+<body class="text-slate-800">
+
+    <div id="root"></div>
+
+    <script type="text/babel">
+        const { useState, useMemo, useEffect } = React;
+        const { 
+            Radar, RadarChart, PolarGrid, PolarAngleAxis, PolarRadiusAxis, 
+            BarChart, Bar, XAxis, YAxis, CartesianGrid, Tooltip, Legend, ResponsiveContainer,
+            PieChart, Pie, Cell 
+        } = Recharts;
+
+        // --- 設定您的 Google Apps Script 網址 ---
+        const API_URL = "https://script.google.com/macros/s/AKfycbxprqwW-XeHgCp3QpjApCTK7BJPnZqiZgx371AmY8ztM1Ac8VSM_gRVS5NIEqOWHMfcqQ/exec";
+
+        // --- 題目定義 ---
+        const questions = {
+            learning: [
+                { key: 'q1', short: '概念', label: 'OSCE 基本概念' },
+                { key: 'q2', short: '現況', label: '台灣國考現況' },
+                { key: 'q3', short: '共識', label: '評分共識建立' },
+                { key: 'q4', short: '標準', label: '評分表與及格標準' },
+                { key: 'q5', short: '應變', label: '考場突發應變' },
+            ],
+            satisfaction: [
+                { key: 'sat_q1', short: '內容編排', label: '課程內容的編排邏輯清晰，容易吸收' },
+                { key: 'sat_q2', short: '學習氣氛', label: '講師能營造溫馨氣氛，減緩焦慮' },
+                { key: 'sat_q3', short: '勝任信心', label: '有信心勝任 OSCE 考官任務' },
+            ],
+            environment: [
+                { key: 'env_q1', short: '空間舒適', label: '訓練場地的空間舒適度' },
+                { key: 'env_q2', short: '硬體設備', label: '硬體設備的運作品質' },
+                { key: 'env_q3', short: '教材資料', label: '教材資料清晰易讀' },
+            ]
+        };
+
+        // --- 元件：Insight Box ---
+        const InsightBox = ({ title, children, type = 'blue' }) => {
+            const styles = {
+                blue: { bg: 'bg-blue-50', border: 'border-blue-200', icon: 'text-blue-600', title: 'text-blue-900' },
+                green: { bg: 'bg-emerald-50', border: 'border-emerald-200', icon: 'text-emerald-600', title: 'text-emerald-900' },
+                purple: { bg: 'bg-purple-50', border: 'border-purple-200', icon: 'text-purple-600', title: 'text-purple-900' },
+                orange: { bg: 'bg-orange-50', border: 'border-orange-200', icon: 'text-orange-600', title: 'text-orange-900' },
+            };
+            const s = styles[type];
+            
+            return (
+                <div className={`p-5 rounded-xl border ${s.bg} ${s.border} mb-6 shadow-sm`}>
+                    <div className="flex items-start gap-4">
+                        <div className={`mt-1 p-2 bg-white rounded-full shadow-sm ${s.icon}`}>
+                            <i className="fa-solid fa-lightbulb text-lg"></i>
+                        </div>
+                        <div>
+                            <h4 className={`font-extrabold text-base mb-2 ${s.title}`}>{title}</h4>
+                            <div className="text-sm leading-relaxed text-slate-700 font-medium">{children}</div>
+                        </div>
+                    </div>
+                </div>
+            );
+        };
+
+        // --- 元件：Stat Card ---
+        const StatCard = ({ title, value, subtext, iconClass, colorClass, gradient }) => (
+            <div className={`bg-white p-6 rounded-2xl shadow-sm border border-slate-100 flex flex-col justify-between hover-card relative overflow-hidden group`}>
+                {/* 裝飾背景圓圈 */}
+                <div className={`absolute -right-6 -top-6 w-24 h-24 rounded-full opacity-10 group-hover:scale-110 transition-transform duration-500 ${gradient}`}></div>
+                
+                <div className="relative z-10">
+                    <div className="flex justify-between items-start mb-4">
+                        <p className="text-xs font-bold text-slate-400 uppercase tracking-wider">{title}</p>
+                        <div className={`p-2 rounded-lg bg-opacity-10 ${colorClass.replace('text-', 'bg-')}`}>
+                            <i className={`${iconClass} text-lg ${colorClass}`}></i>
+                        </div>
+                    </div>
+                    <div className="flex items-baseline gap-2">
+                        <h3 className="text-4xl font-black text-slate-800 tracking-tight">{value}</h3>
+                    </div>
+                    {subtext && <div className={`flex items-center text-xs mt-3 font-bold ${colorClass}`}>{subtext}</div>}
+                </div>
+            </div>
+        );
+
+        // --- 元件：NPS Card ---
+        const NPSCard = ({ score, distribution }) => {
+            let color = 'text-emerald-600';
+            let bgColor = 'bg-emerald-100';
+            let label = 'Excellent';
+
+            if (score < 0) { color = 'text-rose-600'; bgColor = 'bg-rose-100'; label = 'Needs Improvement'; }
+            else if (score < 30) { color = 'text-amber-600'; bgColor = 'bg-amber-100'; label = 'Good'; }
+            else if (score < 70) { color = 'text-blue-600'; bgColor = 'bg-blue-100'; label = 'Great'; }
+
+            const pieData = [
+                { name: 'Promoters', value: distribution.promoters, color: '#10b981' }, 
+                { name: 'Passives', value: distribution.passives, color: '#fbbf24' },   
+                { name: 'Detractors', value: distribution.detractors, color: '#f43f5e' } 
+            ];
+
+            return (
+                <div className="bg-white p-6 rounded-2xl shadow-sm border border-slate-100 flex flex-col justify-between hover-card relative overflow-hidden">
+                    <div className="absolute top-0 right-0 w-32 h-32 bg-gradient-to-bl from-slate-50 to-transparent rounded-bl-full -z-0"></div>
+                    <div className="relative z-10">
+                        <div className="flex justify-between items-start mb-2">
+                            <p className="text-xs font-bold text-slate-400 uppercase tracking-wider">c-NPS 淨推薦值</p>
+                            <div className="group relative cursor-help text-slate-300 hover:text-slate-500">
+                                <i className="fa-solid fa-circle-info"></i>
+                                <div className="absolute bottom-full left-1/2 transform -translate-x-1/2 mb-2 px-3 py-2 bg-slate-800 text-white text-xs rounded-lg shadow-lg opacity-0 group-hover:opacity-100 transition-opacity whitespace-nowrap pointer-events-none z-20">
+                                    計算方式：(推薦者% - 批評者%) * 100
+                                </div>
+                            </div>
+                        </div>
+                        <div className="flex items-baseline gap-3 mb-4">
+                            <h3 className={`text-5xl font-black ${color}`}>{score > 0 ? `+${score}` : score}</h3>
+                            <span className={`text-xs font-bold px-3 py-1 rounded-full uppercase tracking-wide ${bgColor} ${color}`}>{label}</span>
+                        </div>
+
+                        <div className="flex items-center gap-4 mt-auto pt-4 border-t border-slate-100">
+                            <div className="w-12 h-12 relative flex-shrink-0">
+                                <ResponsiveContainer width="100%" height="100%">
+                                <PieChart>
+                                    <Pie data={pieData} dataKey="value" innerRadius={15} outerRadius={24} stroke="none">
+                                    {pieData.map((entry, index) => (
+                                        <Cell key={`cell-${index}`} fill={entry.color} />
+                                    ))}
+                                    </Pie>
+                                </PieChart>
+                                </ResponsiveContainer>
+                            </div>
+                            <div className="text-xs font-semibold text-slate-500 space-y-1 flex-1">
+                                <div className="flex justify-between items-center">
+                                    <span className="flex items-center"><span className="w-2 h-2 rounded-full bg-emerald-500 mr-2"></span>推薦 (9-10)</span>
+                                    <span className="font-bold text-slate-700">{distribution.promoters}</span>
+                                </div>
+                                <div className="flex justify-between items-center">
+                                    <span className="flex items-center"><span className="w-2 h-2 rounded-full bg-amber-400 mr-2"></span>被動 (7-8)</span>
+                                    <span className="font-bold text-slate-700">{distribution.passives}</span>
+                                </div>
+                                <div className="flex justify-between items-center">
+                                    <span className="flex items-center"><span className="w-2 h-2 rounded-full bg-rose-500 mr-2"></span>批評 (0-6)</span>
+                                    <span className="font-bold text-slate-700">{distribution.detractors}</span>
+                                </div>
+                            </div>
+                        </div>
+                    </div>
+                </div>
+            );
+        };
+
+        // --- 元件：Sticky Note (便利貼 - 附帶圖釘效果) ---
+        const StickyNote = ({ text, author, years, index }) => {
+            const themes = [
+                { bg: 'bg-yellow-100', shadow: 'shadow-yellow-200/50', rotate: 'rotate-1' },
+                { bg: 'bg-rose-100', shadow: 'shadow-rose-200/50', rotate: '-rotate-1' },
+                { bg: 'bg-sky-100', shadow: 'shadow-sky-200/50', rotate: 'rotate-2' },
+                { bg: 'bg-lime-100', shadow: 'shadow-lime-200/50', rotate: '-rotate-2' }
+            ];
+            const theme = themes[index % themes.length];
+
+            return (
+                <div className={`relative p-6 pt-8 shadow-lg ${theme.bg} ${theme.shadow} text-slate-800 w-full min-h-[180px] flex flex-col justify-between transform ${theme.rotate} hover:rotate-0 hover:scale-105 hover:z-10 transition-all duration-300 rounded-sm`}>
+                    
+                    {/* 圖釘 (Pushpin) */}
+                    <div className="absolute -top-3 left-1/2 transform -translate-x-1/2 z-20">
+                        <i className="fa-solid fa-thumbtack text-rose-500 text-2xl drop-shadow-md"></i>
+                    </div>
+                    {/* 圖釘陰影 (Pin Shadow) */}
+                    <div className="absolute -top-1 left-1/2 transform -translate-x-1/2 z-10 w-2 h-2 bg-black/20 rounded-full blur-[1px]"></div>
+
+                    <p className="text-xl leading-snug font-bold mb-4">"{text}"</p>
+                    <div className="text-sm text-slate-600 text-right border-t border-slate-900/10 pt-2 font-bold">
+                        <span className="block text-slate-800">{author}</span>
+                        <span className="text-xs font-normal opacity-75">{years}</span>
+                    </div>
+                </div>
+            );
+        };
+
+        // --- 元件：PDCA Card ---
+        const PDCACard = ({ step, title, iconClass, color, children }) => (
+            <div className={`bg-white rounded-2xl shadow-sm border-l-[6px] ${color} p-6 hover:shadow-md transition-shadow`}>
+                <div className="flex items-center mb-4">
+                    <div className={`w-10 h-10 rounded-xl flex items-center justify-center text-white mr-4 shadow-md transform -rotate-3`} style={{backgroundColor: color.replace('border-', 'var(--tw-border-opacity, 1) #').replace('l-[6px]', '').trim()}}>
+                        <i className={`${iconClass} text-lg`}></i>
+                    </div>
+                    <div>
+                        <span className="text-xs font-black text-slate-400 uppercase tracking-widest">{step}</span>
+                        <h4 className="font-extrabold text-lg text-slate-800">{title}</h4>
+                    </div>
+                </div>
+                <div className="text-sm text-slate-600 font-medium leading-relaxed pl-14">
+                    {children}
+                </div>
+            </div>
+        );
+
+        // --- 主應用程式 ---
+        const Dashboard = () => {
+            const [data, setData] = useState([]);
+            const [loading, setLoading] = useState(true);
+            const [error, setError] = useState(null);
+            const [filterProfession, setFilterProfession] = useState('All');
+
+            const fetchData = async () => {
+                setLoading(true);
+                setError(null);
+                try {
+                    const response = await fetch(API_URL);
+                    if (!response.ok) throw new Error('網路回應異常');
+                    const jsonData = await response.json();
+                    setData(Array.isArray(jsonData) ? jsonData : []);
+                } catch (err) {
+                    console.error("Fetch Error:", err);
+                    setError("無法讀取資料，請確認網路連線或 Google Sheet 權限。");
+                } finally {
+                    setLoading(false);
+                }
+            };
+
+            useEffect(() => { fetchData(); }, []);
+
+            const filteredData = useMemo(() => {
+                if (filterProfession === 'All') return data;
+                return data.filter(d => d.profession === filterProfession);
+            }, [data, filterProfession]);
+
+            const professions = useMemo(() => {
+                const list = ['All', ...new Set(data.map(d => d.profession))];
+                return list.filter(p => p);
+            }, [data]);
+
+            // Stats Calculation
+            const stats = useMemo(() => {
+                const count = filteredData.length;
+                if (count === 0) return { count: 0, avgSat: 0, avgGrowth: 0, nps: 0, npsDist: {promoters:0, passives:0, detractors:0} };
+
+                const totalSat = filteredData.reduce((acc, curr) => acc + Number(curr.sat_q1 || 0) + Number(curr.sat_q2 || 0) + Number(curr.sat_q3 || 0), 0);
+                const avgSat = (totalSat / (count * 3)).toFixed(1);
+                
+                let totalGrowth = 0;
+                filteredData.forEach(d => {
+                    questions.learning.forEach(q => {
+                        totalGrowth += (Number(d[`${q.key}_post`] || 0) - Number(d[`${q.key}_pre`] || 0));
+                    });
+                });
+                const avgGrowth = (totalGrowth / (count * 5)).toFixed(1);
+
+                let promoters = 0, passives = 0, detractors = 0;
+                filteredData.forEach(d => {
+                    const avgScore = (Number(d.sat_q1 || 0) + Number(d.sat_q2 || 0) + Number(d.sat_q3 || 0)) / 3;
+                    if (avgScore >= 9) promoters++;
+                    else if (avgScore >= 7) passives++;
+                    else detractors++;
+                });
+                const nps = Math.round(((promoters - detractors) / count) * 100);
+
+                return { count, avgSat, avgGrowth, nps, npsDist: { promoters, passives, detractors } };
+            }, [filteredData]);
+
+            // Chart Data Calculations
+            const learningAnalysis = useMemo(() => {
+                if (filteredData.length === 0) return { data: [], maxGrowthItem: {}, minPostItem: {} };
+                const analysisData = questions.learning.map(q => {
+                    const preAvg = filteredData.reduce((acc, curr) => acc + Number(curr[`${q.key}_pre`] || 0), 0) / filteredData.length;
+                    const postAvg = filteredData.reduce((acc, curr) => acc + Number(curr[`${q.key}_post`] || 0), 0) / filteredData.length;
+                    return {
+                        key: q.key,
+                        subject: q.short,
+                        fullLabel: q.label,
+                        '受訓前': parseFloat(preAvg.toFixed(2)),
+                        '受訓後': parseFloat(postAvg.toFixed(2)),
+                        '成長幅度': parseFloat((postAvg - preAvg).toFixed(2))
+                    };
+                });
+                const maxGrowthItem = analysisData.reduce((prev, current) => (prev['成長幅度'] > current['成長幅度']) ? prev : current, analysisData[0]);
+                const minPostItem = analysisData.reduce((prev, current) => (prev['受訓後'] < current['受訓後']) ? prev : current, analysisData[0]);
+                return { data: analysisData, maxGrowthItem, minPostItem };
+            }, [filteredData]);
+
+            const satisfactionAnalysis = useMemo(() => {
+                if (filteredData.length === 0) return { data: [], topItem: {}, lowItem: {}, isHighPerformance: false };
+                const satData = questions.satisfaction.map(q => ({
+                    name: q.short,
+                    fullName: q.label,
+                    score: (filteredData.reduce((acc, curr) => acc + Number(curr[q.key] || 0), 0) / filteredData.length).toFixed(1),
+                    type: '課程體驗'
+                }));
+                const envData = questions.environment.map(q => ({
+                    name: q.short,
+                    fullName: q.label,
+                    score: (filteredData.reduce((acc, curr) => acc + Number(curr[q.key] || 0), 0) / filteredData.length).toFixed(1),
+                    type: '環境硬體'
+                }));
+                const allData = [...satData, ...envData].sort((a, b) => b.score - a.score);
+                const topItem = allData[0];
+                const lowItem = allData[allData.length - 1];
+                const isHighPerformance = parseFloat(lowItem.score) >= 8.5;
+                return { data: allData, topItem, lowItem, isHighPerformance };
+            }, [filteredData]);
+
+            const professionAnalysis = useMemo(() => {
+                if (filteredData.length === 0) return { data: [], highest: {}, lowest: {} };
+                const groups = {};
+                filteredData.forEach(d => {
+                    if (!d.profession) return;
+                    if (!groups[d.profession]) {
+                        groups[d.profession] = { count: 0, totalScore: 0 };
+                    }
+                    const userSat = (Number(d.sat_q1 || 0) + Number(d.sat_q2 || 0) + Number(d.sat_q3 || 0)) / 3;
+                    groups[d.profession].count += 1;
+                    groups[d.profession].totalScore += userSat;
+                });
+                const result = Object.keys(groups).map(prof => ({
+                    name: prof,
+                    avgScore: parseFloat((groups[prof].totalScore / groups[prof].count).toFixed(1)),
+                    count: groups[prof].count
+                })).sort((a, b) => b.avgScore - a.avgScore);
+                const highest = result[0] || {};
+                const lowest = result[result.length - 1] || {};
+                return { data: result, highest, lowest };
+            }, [filteredData]);
+
+            if (loading) return (
+                <div className="min-h-screen bg-slate-50 flex flex-col items-center justify-center text-slate-500">
+                    <i className="fa-solid fa-spinner fa-spin text-4xl text-blue-600 mb-4"></i>
+                    <p className="font-bold tracking-wide">數據載入中，請稍候...</p>
+                </div>
+            );
+
+            if (error) return (
+                <div className="min-h-screen bg-slate-50 flex flex-col items-center justify-center">
+                    <div className="bg-white p-8 rounded-2xl shadow-lg border border-red-100 text-center max-w-md">
+                        <div className="w-16 h-16 bg-red-50 rounded-full flex items-center justify-center mx-auto mb-4 text-red-500 text-2xl">
+                            <i className="fa-solid fa-triangle-exclamation"></i>
+                        </div>
+                        <h3 className="text-xl font-bold text-slate-800 mb-2">發生錯誤</h3>
+                        <p className="text-slate-500 mb-6 font-medium">{error}</p>
+                        <button onClick={fetchData} className="px-6 py-2 bg-slate-900 text-white rounded-lg font-bold hover:bg-slate-700 transition">重試連線</button>
+                    </div>
+                </div>
+            );
+
+            return (
+                <div className="min-h-screen font-sans text-slate-800 pb-20">
+                    
+                    {/* Header */}
+                    <header className="bg-gradient-to-r from-slate-900 via-blue-900 to-indigo-900 text-white shadow-xl sticky top-0 z-30 backdrop-blur-md bg-opacity-95">
+                        <div className="max-w-7xl mx-auto px-4 sm:px-6 lg:px-8">
+                        <div className="flex justify-between h-20 items-center">
+                            <div className="flex items-center gap-4">
+                                <div className="bg-white/10 p-2.5 rounded-xl border border-white/10 shadow-inner">
+                                    <i className="fa-solid fa-user-doctor h-6 w-6 text-blue-200 flex items-center justify-center"></i>
+                                </div>
+                                <div>
+                                    <h1 className="text-xl md:text-2xl font-black tracking-tight leading-none mb-1">奇美醫院 OSCE 考官培訓</h1>
+                                    <span className="text-xs font-bold text-blue-200 uppercase tracking-widest opacity-80">成效分析儀表板</span>
+                                </div>
+                            </div>
+                            <div className="flex items-center gap-3">
+                                <button onClick={fetchData} className="p-2.5 text-blue-200 hover:text-white hover:bg-white/10 rounded-lg transition-all" title="重新整理">
+                                    <i className="fa-solid fa-rotate w-4 h-4"></i>
+                                </button>
+
+                                <div className="flex items-center bg-slate-800/50 rounded-lg px-4 py-2 border border-white/10 backdrop-blur-sm">
+                                    <i className="fa-solid fa-filter w-3 h-3 text-blue-300 mr-2"></i>
+                                    <select 
+                                        className="bg-transparent border-none text-sm font-bold focus:ring-0 cursor-pointer text-white outline-none"
+                                        value={filterProfession}
+                                        onChange={(e) => setFilterProfession(e.target.value)}
+                                    >
+                                        {professions.map(p => (
+                                            <option key={p} value={p} className="text-slate-800">{p === 'All' ? '所有職類' : p}</option>
+                                        ))}
+                                    </select>
+                                </div>
+                            </div>
+                        </div>
+                        </div>
+                    </header>
+
+                    <main className="max-w-7xl mx-auto px-4 sm:px-6 lg:px-8 py-10 space-y-10">
+                        
+                        {filteredData.length === 0 ? (
+                        <div className="text-center py-24 bg-white rounded-3xl shadow-sm border border-slate-200/60 dashed-border">
+                            <div className="w-20 h-20 bg-slate-50 rounded-full flex items-center justify-center mx-auto mb-6 text-slate-300 text-4xl">
+                                <i className="fa-regular fa-folder-open"></i>
+                            </div>
+                            <h3 className="text-2xl font-black text-slate-800 mb-2">目前沒有資料</h3>
+                            <p className="text-slate-500 font-medium mb-8">請確認問卷是否已有回覆，或嘗試切換篩選條件。</p>
+                            <button onClick={fetchData} className="px-8 py-3 bg-blue-600 text-white rounded-xl font-bold shadow-lg shadow-blue-200 hover:bg-blue-700 transition transform hover:-translate-y-1">重新載入</button>
+                        </div>
+                        ) : (
+                        <React.Fragment>
+                            {/* 1. KPI Stats & NPS */}
+                            <section className="grid grid-cols-1 md:grid-cols-2 lg:grid-cols-4 gap-6">
+                                <StatCard 
+                                    title="有效問卷回收" 
+                                    value={stats.count} 
+                                    subtext={<span className="flex items-center"><i className="fa-solid fa-users w-3 h-3 mr-1.5"></i> {professions.length - 1} 個不同職類</span>}
+                                    iconClass="fa-solid fa-file-signature" 
+                                    colorClass="text-blue-600"
+                                    gradient="bg-blue-600"
+                                />
+                                <StatCard 
+                                    title="核心能力成長" 
+                                    value={Number(stats.avgGrowth) > 0 ? `+${stats.avgGrowth}` : stats.avgGrowth} 
+                                    subtext={<span className="flex items-center text-emerald-600"><i className="fa-solid fa-arrow-trend-up w-3 h-3 mr-1.5"></i> 顯著提升 (滿分5分)</span>}
+                                    iconClass="fa-solid fa-chart-line" 
+                                    colorClass="text-emerald-600" 
+                                    gradient="bg-emerald-600"
+                                />
+                                <StatCard 
+                                    title="總體滿意度" 
+                                    value={stats.avgSat} 
+                                    subtext={<span className="flex items-center text-purple-600"><i className="fa-solid fa-medal w-3 h-3 mr-1.5"></i> 高標水準 (滿分10分)</span>}
+                                    iconClass="fa-solid fa-heart" 
+                                    colorClass="text-purple-600" 
+                                    gradient="bg-purple-600"
+                                />
+                                <NPSCard score={stats.nps} distribution={stats.npsDist} />
+                            </section>
+
+                            {/* 2. Learning Curve */}
+                            <section className="grid grid-cols-1 lg:grid-cols-3 gap-8">
+                                <div className="lg:col-span-1 space-y-6">
+                                    <div className="bg-white p-6 rounded-2xl shadow-sm border border-slate-100 h-full flex flex-col">
+                                        <h3 className="text-xl font-extrabold text-slate-800 mb-6 flex items-center">
+                                            <span className="w-1.5 h-6 bg-blue-600 rounded-full mr-3"></span>
+                                            整體能力雷達圖
+                                        </h3>
+                                        <div className="flex-1 min-h-[300px] relative">
+                                            <ResponsiveContainer width="100%" height="100%">
+                                            <RadarChart cx="50%" cy="50%" outerRadius="70%" data={learningAnalysis.data}>
+                                                <PolarGrid stroke="#e2e8f0" strokeDasharray="3 3" />
+                                                <PolarAngleAxis dataKey="subject" tick={{ fill: '#64748b', fontSize: 13, fontWeight: 700 }} />
+                                                <PolarRadiusAxis angle={30} domain={[0, 5]} tick={false} />
+                                                <Radar name="受訓前" dataKey="受訓前" stroke="#94a3b8" fill="#94a3b8" fillOpacity={0.2} />
+                                                <Radar name="受訓後" dataKey="受訓後" stroke="#2563eb" fill="#3b82f6" fillOpacity={0.5} />
+                                                <Legend wrapperStyle={{fontWeight: 'bold', paddingTop: '20px'}}/>
+                                                <Tooltip contentStyle={{borderRadius: '12px', border: 'none', boxShadow: '0 10px 15px -3px rgba(0, 0, 0, 0.1)'}} itemStyle={{fontWeight: 'bold'}} />
+                                            </RadarChart>
+                                            </ResponsiveContainer>
+                                        </div>
+                                        {learningAnalysis.maxGrowthItem.fullLabel && (
+                                            <InsightBox title="數據洞察：學習成效" type="blue">
+                                            學員在<strong>「{learningAnalysis.maxGrowthItem.fullLabel}」</strong>的成長幅度最大（<span className="text-blue-700 font-bold">+{learningAnalysis.maxGrowthItem['成長幅度']}</span>），顯示課程成功建立了學員的評分觀念。
+                                            </InsightBox>
+                                        )}
+                                    </div>
+                                </div>
+
+                                <div className="lg:col-span-2 bg-white p-8 rounded-2xl shadow-sm border border-slate-100">
+                                    <h3 className="text-xl font-extrabold text-slate-800 mb-8 flex items-center justify-between">
+                                    <span className="flex items-center"><span className="w-1.5 h-6 bg-blue-600 rounded-full mr-3"></span>各題項成長幅度細節</span>
+                                    <span className="text-xs font-bold text-slate-500 bg-slate-100 px-3 py-1.5 rounded-lg">Pre (灰) vs Post (藍)</span>
+                                    </h3>
+                                    <div className="space-y-8">
+                                    {learningAnalysis.data.map((item, idx) => (
+                                        <div key={idx} className="relative group">
+                                        <div className="flex justify-between mb-2">
+                                            <span className="font-bold text-slate-700 text-sm w-1/3 truncate" title={item.fullLabel}>
+                                            <span className="inline-block w-6 text-slate-400">{idx + 1}.</span> {item.fullLabel}
+                                            </span>
+                                            <div className="flex items-center gap-4 text-sm">
+                                            <span className="text-slate-400 font-medium">前 {item['受訓前']}</span>
+                                            <span className="font-black text-blue-600 text-base">後 {item['受訓後']}</span>
+                                            <span className="text-xs bg-emerald-100 text-emerald-700 px-2 py-1 rounded-md font-bold">+{item['成長幅度']}</span>
+                                            </div>
+                                        </div>
+                                        <div className="h-4 w-full bg-slate-100 rounded-full overflow-hidden flex relative shadow-inner">
+                                            <div style={{ width: `${(item['受訓前'] / 5) * 100}%` }} className="h-full bg-slate-300"></div>
+                                            <div style={{ position: 'absolute', left: `${(item['受訓前'] / 5) * 100}%`, width: `${(item['成長幅度'] / 5) * 100}%` }} className="h-full bg-blue-600 relative overflow-hidden">
+                                                <div className="absolute inset-0 bg-white/20 animate-[pulse_2s_infinite]"></div>
+                                            </div>
+                                            <div style={{ position: 'absolute', left: 0, width: `${(item['受訓後'] / 5) * 100}%` }} className="h-full border-r-2 border-white/50"></div>
+                                        </div>
+                                        </div>
+                                    ))}
+                                    </div>
+                                </div>
+                            </section>
+
+                            {/* 3. 職類接受度 (Profession) */}
+                            <section className="bg-white p-8 rounded-2xl shadow-sm border border-slate-100">
+                                <h3 className="text-xl font-extrabold text-slate-800 mb-8 flex items-center">
+                                    <span className="w-1.5 h-6 bg-indigo-600 rounded-full mr-3"></span>
+                                    各職類滿意度與接受度分析
+                                </h3>
+                                
+                                <div className="grid grid-cols-1 lg:grid-cols-3 gap-10">
+                                    <div className="lg:col-span-1">
+                                    {professionAnalysis.highest.name && (
+                                        <InsightBox title="數據洞察：職類接受度" type="blue">
+                                        目前<strong>「{professionAnalysis.highest.name}」</strong>的接受度最高（滿意度 <span className="font-black text-indigo-700">{professionAnalysis.highest.avgScore}</span> 分，樣本數 {professionAnalysis.highest.count}）。
+                                        <br/><br/>
+                                        {professionAnalysis.lowest.name !== professionAnalysis.highest.name && (
+                                            <span>
+                                            相對而言<strong>「{professionAnalysis.lowest.name}」</strong>的滿意度稍低（{professionAnalysis.lowest.avgScore} 分），建議了解其特定需求。
+                                            </span>
+                                        )}
+                                        {filterProfession !== 'All' && (
+                                            <div className="mt-3 pt-3 border-t border-blue-200 text-xs text-blue-800/70 font-bold">
+                                            * 註：目前已篩選特定職類，切換為「所有職類」可查看完整比較。
+                                            </div>
+                                        )}
+                                        </InsightBox>
+                                    )}
+                                    <p className="text-sm text-slate-500 font-medium leading-relaxed mt-4">
+                                        此圖表綜合了「內容編排」、「學習氣氛」與「勝任信心」三項指標，反映出不同職類對於本次考官培訓工作坊的整體接受程度。
+                                    </p>
+                                    </div>
+
+                                    <div className="lg:col-span-2 h-80">
+                                    <ResponsiveContainer width="100%" height="100%">
+                                        <BarChart
+                                        data={professionAnalysis.data}
+                                        layout="vertical"
+                                        margin={{ top: 5, right: 30, left: 60, bottom: 5 }}
+                                        >
+                                        <CartesianGrid strokeDasharray="3 3" horizontal={true} vertical={false} stroke="#e2e8f0"/>
+                                        <XAxis type="number" domain={[0, 10]} hide />
+                                        <YAxis 
+                                            dataKey="name" 
+                                            type="category" 
+                                            width={120} 
+                                            tick={{fontSize: 14, fill: '#334155', fontWeight: 700}} 
+                                        />
+                                        <Tooltip 
+                                            cursor={{fill: '#f8fafc'}}
+                                            contentStyle={{ borderRadius: '12px', border: 'none', boxShadow: '0 10px 15px -3px rgba(0, 0, 0, 0.1)' }}
+                                            formatter={(value, name, props) => [
+                                            <span className="font-bold text-indigo-600">{value} 分 (樣本: {props.payload.count})</span>, 
+                                            '平均滿意度'
+                                            ]} 
+                                        />
+                                        <Bar dataKey="avgScore" radius={[0, 6, 6, 0]} barSize={28}>
+                                            {professionAnalysis.data.map((entry, index) => (
+                                                <Cell key={`cell-${index}`} fill={index === 0 ? '#4338ca' : '#818cf8'} />
+                                            ))}
+                                        </Bar>
+                                        </BarChart>
+                                    </ResponsiveContainer>
+                                    </div>
+                                </div>
+                            </section>
+
+                            {/* 4. Satisfaction */}
+                            <section className="bg-white p-8 rounded-2xl shadow-sm border border-slate-100">
+                                <div className="grid grid-cols-1 lg:grid-cols-3 gap-10">
+                                    <div className="lg:col-span-1">
+                                    <h3 className="text-xl font-extrabold text-slate-800 mb-6 flex items-center">
+                                        <span className="w-1.5 h-6 bg-purple-600 rounded-full mr-3"></span>
+                                        體驗滿意度排行
+                                    </h3>
+                                    
+                                    {satisfactionAnalysis.topItem.fullName && (
+                                        <InsightBox title="數據洞察：滿意度" type="purple">
+                                        本梯次表現最佳為<strong>「{satisfactionAnalysis.topItem.fullName}」</strong>（<span className="font-black text-purple-700">{satisfactionAnalysis.topItem.score}</span> 分）。
+                                        <br/><br/>
+                                        {satisfactionAnalysis.isHighPerformance ? (
+                                            <span className="text-emerald-700 font-bold flex items-center mt-2">
+                                            <i className="fa-solid fa-circle-check mr-2"></i>
+                                            各項滿意度皆高於 8.5 分，整體表現優異，無顯著弱項。
+                                            </span>
+                                        ) : (
+                                            <span>
+                                            相對較低項目為<strong>「{satisfactionAnalysis.lowItem.fullName}」</strong>，可納入未來優化考量。
+                                            </span>
+                                        )}
+                                        </InsightBox>
+                                    )}
+                                    
+                                    <div className="mt-8 space-y-4">
+                                        <div className="flex items-center gap-3 p-3 bg-purple-50 rounded-xl border border-purple-100">
+                                            <div className="w-4 h-4 rounded-full bg-purple-600 shadow-sm"></div>
+                                            <span className="text-sm font-bold text-slate-700">課程體驗題項</span>
+                                        </div>
+                                        <div className="flex items-center gap-3 p-3 bg-teal-50 rounded-xl border border-teal-100">
+                                            <div className="w-4 h-4 rounded-full bg-teal-500 shadow-sm"></div>
+                                            <span className="text-sm font-bold text-slate-700">環境硬體題項</span>
+                                        </div>
+                                    </div>
+                                    </div>
+                                    <div className="lg:col-span-2 h-80">
+                                    <ResponsiveContainer width="100%" height="100%">
+                                        <BarChart layout="vertical" data={satisfactionAnalysis.data} margin={{ top: 5, right: 30, left: 120, bottom: 5 }}>
+                                            <CartesianGrid strokeDasharray="3 3" horizontal={true} vertical={false} stroke="#e2e8f0" />
+                                            <XAxis type="number" domain={[0, 10]} hide />
+                                            <YAxis dataKey="name" type="category" width={140} tick={{fontSize: 14, fill: '#334155', fontWeight: 700}} interval={0} />
+                                            <Tooltip 
+                                                cursor={{fill: '#f8fafc'}} 
+                                                contentStyle={{ borderRadius: '12px', border: 'none', boxShadow: '0 10px 15px -3px rgba(0, 0, 0, 0.1)' }} 
+                                                formatter={(value) => [<span className="font-bold">{value}</span>, '平均分數']} 
+                                            />
+                                            <Bar dataKey="score" radius={[0, 6, 6, 0]} barSize={28}>
+                                            {satisfactionAnalysis.data.map((entry, index) => (
+                                                <Cell key={`cell-${index}`} fill={entry.type === '課程體驗' ? '#9333ea' : '#14b8a6'} />
+                                            ))}
+                                            </Bar>
+                                        </BarChart>
+                                        </ResponsiveContainer>
+                                    </div>
+                                </div>
+                            </section>
+
+                            {/* 5. Qualitative Feedback (Sticky Notes) */}
+                            <section>
+                                <h3 className="text-xl font-extrabold text-slate-800 mb-8 flex items-center">
+                                    <span className="w-1.5 h-6 bg-orange-500 rounded-full mr-3"></span>
+                                    學員之聲：回饋與建議牆
+                                </h3>
+                                
+                                <div className="grid grid-cols-1 lg:grid-cols-2 gap-8">
+                                    {/* 收穫牆 */}
+                                    <div className="bg-white p-8 rounded-3xl border border-slate-200/60 shadow-sm bg-[url('https://www.transparenttextures.com/patterns/cubes.png')]">
+                                        <h4 className="text-lg font-black text-slate-700 mb-6 flex items-center border-b pb-4 border-slate-100">
+                                            <span className="w-8 h-8 bg-yellow-100 text-yellow-600 rounded-lg flex items-center justify-center mr-3"><i className="fa-solid fa-star"></i></span>
+                                            最有收穫的部分 (Open Q1)
+                                        </h4>
+                                        <div className="grid grid-cols-1 sm:grid-cols-2 gap-6">
+                                            {filteredData.filter(d => d.open_q1).map((d, i) => (
+                                            <StickyNote key={i} index={i} text={d.open_q1} author={d.profession} years={d.years} />
+                                            ))}
+                                            {filteredData.filter(d => d.open_q1).length === 0 && (
+                                            <p className="text-slate-400 font-medium text-sm col-span-2 text-center py-10">尚無文字回饋資料</p>
+                                            )}
+                                        </div>
+                                    </div>
+
+                                    {/* 建議牆 */}
+                                    <div className="bg-white p-8 rounded-3xl border border-slate-200/60 shadow-sm bg-[url('https://www.transparenttextures.com/patterns/cubes.png')]">
+                                        <h4 className="text-lg font-black text-slate-700 mb-6 flex items-center border-b pb-4 border-slate-100">
+                                            <span className="w-8 h-8 bg-rose-100 text-rose-500 rounded-lg flex items-center justify-center mr-3"><i className="fa-solid fa-bullseye"></i></span>
+                                            未來的改進建議 (Open Q2)
+                                        </h4>
+                                        <div className="grid grid-cols-1 sm:grid-cols-2 gap-6">
+                                            {filteredData.filter(d => d.open_q2).map((d, i) => (
+                                            <StickyNote key={i + 100} index={i + 2} text={d.open_q2} author={d.profession} years={d.years} />
+                                            ))}
+                                            {filteredData.filter(d => d.open_q2).length === 0 && (
+                                            <p className="text-slate-400 font-medium text-sm col-span-2 text-center py-10">尚無文字回饋資料</p>
+                                            )}
+                                        </div>
+                                    </div>
+                                </div>
+                            </section>
+
+                            {/* 6. PDCA Section */}
+                            <section className="mt-16 mb-12">
+                                <div className="flex items-center justify-between mb-8">
+                                    <h3 className="text-xl font-extrabold text-slate-800 flex items-center">
+                                    <i className="fa-solid fa-arrows-rotate w-6 h-6 mr-3 text-blue-700"></i>
+                                    PDCA 持續改善循環分析
+                                    </h3>
+                                    <span className="text-xs font-bold bg-blue-100 text-blue-800 px-4 py-1.5 rounded-full border border-blue-200">AI 輔助分析</span>
+                                </div>
+                                
+                                <div className="grid grid-cols-1 md:grid-cols-2 lg:grid-cols-4 gap-6">
+                                    <PDCACard step="Plan" title="計畫與目標" iconClass="fa-solid fa-crosshairs" color="border-blue-500">
+                                    <ul className="space-y-2 list-disc pl-4 marker:text-blue-500">
+                                        <li>提升新進考官對 OSCE 評分架構的認知。</li>
+                                        <li>建立跨職類考官的評分共識 (Inter-rater reliability)。</li>
+                                        <li>減緩初次擔任考官的焦慮感，提升自我效能。</li>
+                                    </ul>
+                                    </PDCACard>
+
+                                    <PDCACard step="Do" title="執行現況" iconClass="fa-solid fa-play" color="border-amber-500">
+                                    <ul className="space-y-2 list-disc pl-4 marker:text-amber-500">
+                                        <li>舉辦實體考官工作坊。</li>
+                                        <li>包含講座、影片評分練習與分組共識討論。</li>
+                                        <li>回收滿意度問卷與核心能力前後測數據。</li>
+                                    </ul>
+                                    </PDCACard>
+
+                                    <PDCACard step="Check" title="查核與發現" iconClass="fa-solid fa-magnifying-glass-chart" color="border-emerald-500">
+                                    <div className="space-y-3">
+                                        <p><strong>整體滿意度：</strong> <span className="text-emerald-600 font-black text-lg">{stats.avgSat}</span> / 10</p>
+                                        <p><strong>能力成長幅度：</strong> <span className="text-blue-600 font-black text-lg">+{stats.avgGrowth}</span></p>
+                                        <div className="mt-2 pt-3 border-t border-slate-100">
+                                        {satisfactionAnalysis.isHighPerformance ? (
+                                            <div className="text-emerald-700 bg-emerald-50 p-3 rounded-lg text-xs font-bold border border-emerald-100">
+                                                <i className="fa-solid fa-star mr-1"></i> 全部項目評分皆高於 8.5，整體表現極佳！
+                                            </div>
+                                        ) : (
+                                            <React.Fragment>
+                                                <p className="text-xs font-bold text-slate-400 mb-2 uppercase">待加強項目 (最低分)：</p>
+                                                <p className="font-bold text-rose-500 text-xs mb-1">
+                                                1. {learningAnalysis.minPostItem.fullLabel} ({learningAnalysis.minPostItem['受訓後']}分)
+                                                </p>
+                                                <p className="font-bold text-rose-500 text-xs">
+                                                2. {satisfactionAnalysis.lowItem.fullName}
+                                                </p>
+                                            </React.Fragment>
+                                        )}
+                                        </div>
+                                    </div>
+                                    </PDCACard>
+
+                                    <PDCACard step="Act" title="改善行動" iconClass="fa-solid fa-sliders" color="border-rose-500">
+                                    <p className="mb-3 font-bold text-slate-800">基於數據的建議：</p>
+                                    <ul className="space-y-2 list-disc pl-4 marker:text-rose-500">
+                                        {satisfactionAnalysis.isHighPerformance ? (
+                                        <li>
+                                            <span className="text-emerald-600 font-bold">品質維持策略：</span><br/>
+                                            目前課程設計與執行成效優異，建議標準化目前流程，作為未來開課模範。可考慮開設進階師培課程。
+                                        </li>
+                                        ) : (
+                                        <React.Fragment>
+                                            <li>
+                                            針對<strong>「{learningAnalysis.minPostItem.fullLabel}」</strong>：
+                                            建議在下次課程增加相關的實際案例演練或影片分析，以提升學員掌握度。
+                                            </li>
+                                            <li>
+                                            針對<strong>「{satisfactionAnalysis.lowItem.fullName}」</strong>：
+                                            {satisfactionAnalysis.lowItem.type === '環境硬體' 
+                                                ? '建議檢視場地設備或教材印刷品質，確保學習環境無虞。' 
+                                                : '建議調整課程節奏或講師互動方式，以提升學員體驗。'}
+                                            </li>
+                                        </React.Fragment>
+                                        )}
+                                    </ul>
+                                    </PDCACard>
+                                </div>
+                            </section>
+                        </React.Fragment>
+                        )}
+                    </main>
+                    
+                    <footer className="text-center text-slate-400 text-sm py-10 border-t border-slate-200 mt-12 bg-white font-medium">
+                        OSCE 考官培訓分析系統 © 2025 | 奇美醫院臨床技能中心
+                    </footer>
+                </div>
+            );
+        };
+
+        const root = ReactDOM.createRoot(document.getElementById('root'));
+        root.render(<Dashboard />);
+    </script>
+</body>
+</html>
