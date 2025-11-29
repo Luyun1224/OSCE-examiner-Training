@@ -50,6 +50,23 @@
             transform: translateY(-4px);
             box-shadow: 0 10px 25px -5px rgba(0, 0, 0, 0.1), 0 8px 10px -6px rgba(0, 0, 0, 0.1);
         }
+
+        /* 照片懸掛搖晃動畫 */
+        @keyframes swing {
+            0% { transform: rotate(var(--rotate-start, 3deg)); }
+            50% { transform: rotate(var(--rotate-end, -2deg)); }
+            100% { transform: rotate(var(--rotate-start, 3deg)); }
+        }
+        .photo-card {
+            transform-origin: top center;
+            animation: swing var(--swing-duration, 3s) ease-in-out infinite;
+            /* 拍立得風格陰影 */
+            box-shadow: 0 4px 6px -1px rgba(0, 0, 0, 0.1), 0 2px 4px -1px rgba(0, 0, 0, 0.06), 0 10px 15px -3px rgba(0, 0, 0, 0.1);
+        }
+        .photo-card:nth-child(odd) { --rotate-start: 2deg; --rotate-end: -1.5deg; --swing-duration: 3.5s; }
+        .photo-card:nth-child(even) { --rotate-start: -1.5deg; --rotate-end: 2deg; --swing-duration: 4s; }
+        .photo-card:nth-child(3n) { --rotate-start: 3deg; --rotate-end: -2deg; --swing-duration: 3s; }
+
     </style>
 </head>
 <body class="text-slate-800">
@@ -134,7 +151,7 @@
             </div>
         );
 
-        // --- 元件：NPS Card ---
+        // --- 元件：NPS Card (修正版) ---
         const NPSCard = ({ score, distribution }) => {
             let color = 'text-emerald-600';
             let bgColor = 'bg-emerald-100';
@@ -151,15 +168,23 @@
             ];
 
             return (
-                <div className="bg-white p-6 rounded-2xl shadow-sm border border-slate-100 flex flex-col justify-between hover-card relative overflow-hidden">
-                    <div className="absolute top-0 right-0 w-32 h-32 bg-gradient-to-bl from-slate-50 to-transparent rounded-bl-full -z-0"></div>
+                // 修正：移除 overflow-hidden，確保 Tooltip 不被裁切
+                <div className="bg-white p-6 rounded-2xl shadow-sm border border-slate-100 flex flex-col justify-between hover-card relative">
+                    
+                    {/* 修正：手動加入 rounded-tr-2xl，讓背景圖貼合圓角 */}
+                    <div className="absolute top-0 right-0 w-32 h-32 bg-gradient-to-bl from-slate-50 to-transparent rounded-bl-full rounded-tr-2xl -z-0"></div>
+                    
                     <div className="relative z-10">
                         <div className="flex justify-between items-start mb-2">
                             <p className="text-xs font-bold text-slate-400 uppercase tracking-wider">c-NPS 淨推薦值</p>
                             <div className="group relative cursor-help text-slate-300 hover:text-slate-500">
                                 <i className="fa-solid fa-circle-info"></i>
-                                <div className="absolute bottom-full left-1/2 transform -translate-x-1/2 mb-2 px-3 py-2 bg-slate-800 text-white text-xs rounded-lg shadow-lg opacity-0 group-hover:opacity-100 transition-opacity whitespace-nowrap pointer-events-none z-20">
-                                    計算方式：(推薦者% - 批評者%) * 100
+                                
+                                {/* 修正：Tooltip 定位與寬度，確保顯示完整 */}
+                                <div className="absolute bottom-full right-0 mb-2 w-48 px-3 py-2 bg-slate-800 text-white text-xs rounded-lg shadow-xl opacity-0 group-hover:opacity-100 transition-opacity pointer-events-none z-50 text-center leading-relaxed">
+                                    計算方式：<br/>(推薦者% - 批評者%) * 100
+                                    {/* 箭頭 */}
+                                    <div className="absolute top-full right-1 -mt-1 border-4 border-transparent border-t-slate-800"></div>
                                 </div>
                             </div>
                         </div>
@@ -200,40 +225,60 @@
             );
         };
 
-        // --- 元件：Sticky Note (便利貼 - 附帶圖釘效果) ---
-        const StickyNote = ({ text, author, years, index }) => {
-            const themes = [
-                { bg: 'bg-yellow-100', shadow: 'shadow-yellow-200/50', rotate: 'rotate-1' },
-                { bg: 'bg-rose-100', shadow: 'shadow-rose-200/50', rotate: '-rotate-1' },
-                { bg: 'bg-sky-100', shadow: 'shadow-sky-200/50', rotate: 'rotate-2' },
-                { bg: 'bg-lime-100', shadow: 'shadow-lime-200/50', rotate: '-rotate-2' }
-            ];
-            const theme = themes[index % themes.length];
+        // --- 元件：Photo Card (拍立得照片風格 - 懸掛效果) ---
+        const PhotoCard = ({ text, author, years, type, index }) => {
+            // 根據類型設定不同的邊框顏色和標籤
+            const typeConfig = type === 'gain' ? {
+                borderColor: 'border-yellow-200',
+                bgColor: 'bg-yellow-50',
+                tagBg: 'bg-yellow-100',
+                tagText: 'text-yellow-700',
+                icon: 'fa-star',
+                label: '收穫'
+            } : {
+                borderColor: 'border-rose-200',
+                bgColor: 'bg-rose-50',
+                tagBg: 'bg-rose-100',
+                tagText: 'text-rose-700',
+                icon: 'fa-bullseye',
+                label: '建議'
+            };
 
             return (
-                <div className={`relative p-6 pt-8 shadow-lg ${theme.bg} ${theme.shadow} text-slate-800 w-full min-h-[180px] flex flex-col justify-between transform ${theme.rotate} hover:rotate-0 hover:scale-105 hover:z-10 transition-all duration-300 rounded-sm`}>
+                <div className={`relative p-4 bg-white border-4 ${typeConfig.borderColor} ${typeConfig.bgColor} text-slate-800 w-full flex flex-col justify-between photo-card rounded-sm z-10`}>
                     
-                    {/* 圖釘 (Pushpin) */}
-                    <div className="absolute -top-3 left-1/2 transform -translate-x-1/2 z-20">
-                        <i className="fa-solid fa-thumbtack text-rose-500 text-2xl drop-shadow-md"></i>
+                    {/* 木夾子與麻繩 (Wooden Clip & Twine) */}
+                    <div className="absolute -top-6 left-1/2 transform -translate-x-1/2 z-20 flex flex-col items-center">
+                        <div className="w-1 h-8 bg-amber-800/60 absolute -top-4"></div> {/* 麻繩 */}
+                        <div className="relative">
+                            <i className="fa-solid fa-clipboard text-amber-700 text-3xl drop-shadow-sm"></i> {/* 木夾子圖示 */}
+                        </div>
                     </div>
-                    {/* 圖釘陰影 (Pin Shadow) */}
-                    <div className="absolute -top-1 left-1/2 transform -translate-x-1/2 z-10 w-2 h-2 bg-black/20 rounded-full blur-[1px]"></div>
 
-                    <p className="text-xl leading-snug font-bold mb-4">"{text}"</p>
-                    <div className="text-sm text-slate-600 text-right border-t border-slate-900/10 pt-2 font-bold">
-                        <span className="block text-slate-800">{author}</span>
-                        <span className="text-xs font-normal opacity-75">{years}</span>
+                    {/* 照片內容區 */}
+                    <div className="bg-white p-4 border border-slate-100 shadow-inner mb-3 min-h-[140px] flex items-center">
+                        <p className="text-lg leading-snug font-bold text-center w-full">"{text}"</p>
+                    </div>
+
+                    {/* 拍立得底部文字區 */}
+                    <div className="flex justify-between items-end border-t border-slate-200 pt-2 font-bold">
+                        <div className={`flex items-center ${typeConfig.tagBg} ${typeConfig.tagText} px-2 py-1 rounded text-xs`}>
+                            <i className={`fa-solid ${typeConfig.icon} mr-1`}></i> {typeConfig.label}
+                        </div>
+                        <div className="text-right">
+                            <span className="block text-slate-800 text-sm">{author}</span>
+                            <span className="text-xs font-normal opacity-75">{years}</span>
+                        </div>
                     </div>
                 </div>
             );
         };
 
-        // --- 元件：PDCA Card ---
-        const PDCACard = ({ step, title, iconClass, color, children }) => (
+        // --- 元件：PDCA Card (修正圖示顯示) ---
+        const PDCACard = ({ step, title, iconClass, color, iconBg, children }) => (
             <div className={`bg-white rounded-2xl shadow-sm border-l-[6px] ${color} p-6 hover:shadow-md transition-shadow`}>
                 <div className="flex items-center mb-4">
-                    <div className={`w-10 h-10 rounded-xl flex items-center justify-center text-white mr-4 shadow-md transform -rotate-3`} style={{backgroundColor: color.replace('border-', 'var(--tw-border-opacity, 1) #').replace('l-[6px]', '').trim()}}>
+                    <div className={`w-10 h-10 rounded-xl flex items-center justify-center text-white mr-4 shadow-md transform -rotate-3 ${iconBg}`}>
                         <i className={`${iconClass} text-lg`}></i>
                     </div>
                     <div>
@@ -318,7 +363,8 @@
                     const postAvg = filteredData.reduce((acc, curr) => acc + Number(curr[`${q.key}_post`] || 0), 0) / filteredData.length;
                     return {
                         key: q.key,
-                        subject: q.short,
+                        // 修改：使用完整的 label 而非 short
+                        subject: q.label, 
                         fullLabel: q.label,
                         '受訓前': parseFloat(preAvg.toFixed(2)),
                         '受訓後': parseFloat(postAvg.toFixed(2)),
@@ -656,42 +702,50 @@
                                 </div>
                             </section>
 
-                            {/* 5. Qualitative Feedback (Sticky Notes) */}
+                            {/* 5. Qualitative Feedback (Photo Wall) */}
                             <section>
                                 <h3 className="text-xl font-extrabold text-slate-800 mb-8 flex items-center">
                                     <span className="w-1.5 h-6 bg-orange-500 rounded-full mr-3"></span>
-                                    學員之聲：回饋與建議牆
+                                    學員之聲：回饋與建議照片牆
                                 </h3>
                                 
-                                <div className="grid grid-cols-1 lg:grid-cols-2 gap-8">
-                                    {/* 收穫牆 */}
-                                    <div className="bg-white p-8 rounded-3xl border border-slate-200/60 shadow-sm bg-[url('https://www.transparenttextures.com/patterns/cubes.png')]">
-                                        <h4 className="text-lg font-black text-slate-700 mb-6 flex items-center border-b pb-4 border-slate-100">
-                                            <span className="w-8 h-8 bg-yellow-100 text-yellow-600 rounded-lg flex items-center justify-center mr-3"><i className="fa-solid fa-star"></i></span>
-                                            最有收穫的部分 (Open Q1)
-                                        </h4>
-                                        <div className="grid grid-cols-1 sm:grid-cols-2 gap-6">
-                                            {filteredData.filter(d => d.open_q1).map((d, i) => (
-                                            <StickyNote key={i} index={i} text={d.open_q1} author={d.profession} years={d.years} />
-                                            ))}
-                                            {filteredData.filter(d => d.open_q1).length === 0 && (
-                                            <p className="text-slate-400 font-medium text-sm col-span-2 text-center py-10">尚無文字回饋資料</p>
-                                            )}
-                                        </div>
-                                    </div>
+                                {/* 石牆背景容器 */}
+                                <div className="relative bg-white p-10 rounded-3xl border border-slate-300 shadow-inner overflow-hidden min-h-[600px]">
+                                    
+                                    {/* 擬真石牆背景圖 (使用高解析度貼圖) */}
+                                    <div className="absolute inset-0 opacity-90 z-0 mix-blend-multiply pointer-events-none" style={{
+                                        backgroundImage: `url('https://images.unsplash.com/photo-1592185152497-24451993066a?q=80&w=2070&auto=format&fit=crop&ixlib=rb-4.0.3&ixid=M3wxMjA3fDB8MHxwaG90by1wYWdlfHx8fGVufDB8fHx8fA%3D%3D')`,
+                                        backgroundSize: 'cover',
+                                        backgroundPosition: 'center',
+                                        filter: 'contrast(1.1) brightness(0.95)'
+                                    }}></div>
+                                    
+                                    {/* 麻繩 (橫跨牆面) */}
+                                    <div className="absolute top-16 left-0 w-full h-1 bg-amber-800/60 z-10 shadow-sm transform -rotate-1"></div>
+                                    <div className="absolute top-[320px] left-0 w-full h-1 bg-amber-800/60 z-10 shadow-sm transform rotate-1"></div>
 
-                                    {/* 建議牆 */}
-                                    <div className="bg-white p-8 rounded-3xl border border-slate-200/60 shadow-sm bg-[url('https://www.transparenttextures.com/patterns/cubes.png')]">
-                                        <h4 className="text-lg font-black text-slate-700 mb-6 flex items-center border-b pb-4 border-slate-100">
-                                            <span className="w-8 h-8 bg-rose-100 text-rose-500 rounded-lg flex items-center justify-center mr-3"><i className="fa-solid fa-bullseye"></i></span>
-                                            未來的改進建議 (Open Q2)
-                                        </h4>
-                                        <div className="grid grid-cols-1 sm:grid-cols-2 gap-6">
-                                            {filteredData.filter(d => d.open_q2).map((d, i) => (
-                                            <StickyNote key={i + 100} index={i + 2} text={d.open_q2} author={d.profession} years={d.years} />
+                                    {/* 照片內容層 */}
+                                    <div className="relative z-20">
+                                        <div className="grid grid-cols-1 sm:grid-cols-2 lg:grid-cols-3 xl:grid-cols-4 gap-x-6 gap-y-16 pt-8 pb-8">
+                                            {/* 收穫 (Gain) 照片 */}
+                                            {filteredData.filter(d => d.open_q1).map((d, i) => (
+                                            <PhotoCard key={`gain-${i}`} index={i} text={d.open_q1} author={d.profession} years={d.years} type="gain" />
                                             ))}
-                                            {filteredData.filter(d => d.open_q2).length === 0 && (
-                                            <p className="text-slate-400 font-medium text-sm col-span-2 text-center py-10">尚無文字回饋資料</p>
+
+                                            {/* 建議 (Suggestion) 照片 */}
+                                            {filteredData.filter(d => d.open_q2).map((d, i) => (
+                                            <PhotoCard key={`suggestion-${i}`} index={i + 100} text={d.open_q2} author={d.profession} years={d.years} type="suggestion" />
+                                            ))}
+
+                                            {/* 無資料時的顯示 */}
+                                            {(filteredData.filter(d => d.open_q1).length === 0 && filteredData.filter(d => d.open_q2).length === 0) && (
+                                            <div className="col-span-full flex justify-center items-center h-64">
+                                                <div className="bg-white/80 p-6 rounded-xl shadow-lg backdrop-blur-sm text-center border-4 border-dashed border-slate-300">
+                                                    <i className="fa-regular fa-image text-4xl text-slate-400 mb-3"></i>
+                                                    <p className="text-slate-500 font-bold text-lg">尚無照片回饋</p>
+                                                    <p className="text-slate-400 text-sm">期待學員的分享...</p>
+                                                </div>
+                                            </div>
                                             )}
                                         </div>
                                     </div>
@@ -709,7 +763,13 @@
                                 </div>
                                 
                                 <div className="grid grid-cols-1 md:grid-cols-2 lg:grid-cols-4 gap-6">
-                                    <PDCACard step="Plan" title="計畫與目標" iconClass="fa-solid fa-crosshairs" color="border-blue-500">
+                                    <PDCACard 
+                                        step="Plan" 
+                                        title="計畫與目標" 
+                                        iconClass="fa-solid fa-crosshairs" 
+                                        color="border-blue-500"
+                                        iconBg="bg-blue-500"
+                                    >
                                     <ul className="space-y-2 list-disc pl-4 marker:text-blue-500">
                                         <li>提升新進考官對 OSCE 評分架構的認知。</li>
                                         <li>建立跨職類考官的評分共識 (Inter-rater reliability)。</li>
@@ -717,7 +777,13 @@
                                     </ul>
                                     </PDCACard>
 
-                                    <PDCACard step="Do" title="執行現況" iconClass="fa-solid fa-play" color="border-amber-500">
+                                    <PDCACard 
+                                        step="Do" 
+                                        title="執行現況" 
+                                        iconClass="fa-solid fa-play" 
+                                        color="border-amber-500"
+                                        iconBg="bg-amber-500"
+                                    >
                                     <ul className="space-y-2 list-disc pl-4 marker:text-amber-500">
                                         <li>舉辦實體考官工作坊。</li>
                                         <li>包含講座、影片評分練習與分組共識討論。</li>
@@ -725,7 +791,13 @@
                                     </ul>
                                     </PDCACard>
 
-                                    <PDCACard step="Check" title="查核與發現" iconClass="fa-solid fa-magnifying-glass-chart" color="border-emerald-500">
+                                    <PDCACard 
+                                        step="Check" 
+                                        title="查核與發現" 
+                                        iconClass="fa-solid fa-magnifying-glass-chart" 
+                                        color="border-emerald-500"
+                                        iconBg="bg-emerald-500"
+                                    >
                                     <div className="space-y-3">
                                         <p><strong>整體滿意度：</strong> <span className="text-emerald-600 font-black text-lg">{stats.avgSat}</span> / 10</p>
                                         <p><strong>能力成長幅度：</strong> <span className="text-blue-600 font-black text-lg">+{stats.avgGrowth}</span></p>
@@ -749,7 +821,13 @@
                                     </div>
                                     </PDCACard>
 
-                                    <PDCACard step="Act" title="改善行動" iconClass="fa-solid fa-sliders" color="border-rose-500">
+                                    <PDCACard 
+                                        step="Act" 
+                                        title="改善行動" 
+                                        iconClass="fa-solid fa-sliders" 
+                                        color="border-rose-500"
+                                        iconBg="bg-rose-500"
+                                    >
                                     <p className="mb-3 font-bold text-slate-800">基於數據的建議：</p>
                                     <ul className="space-y-2 list-disc pl-4 marker:text-rose-500">
                                         {satisfactionAnalysis.isHighPerformance ? (
