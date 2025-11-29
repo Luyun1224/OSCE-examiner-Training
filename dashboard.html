@@ -171,6 +171,29 @@ const PDCACard = ({ step, title, icon: Icon, color, children }) => (
   </div>
 );
 
+// --- 元件：Instructor Card ---
+const InstructorCard = ({ name, title, imagePath }) => (
+  <div className="flex flex-col items-center group">
+    <div className="relative mb-3">
+      <div className="w-24 h-24 rounded-full overflow-hidden border-4 border-white shadow-lg group-hover:scale-110 transition-transform duration-300">
+        <img 
+          src={imagePath} 
+          alt={name}
+          className="w-full h-full object-cover"
+          onError={(e) => {
+            e.target.src = `https://ui-avatars.com/api/?name=${encodeURIComponent(name)}&background=1e3a8a&color=fff&size=200`;
+          }}
+        />
+      </div>
+      <div className="absolute -bottom-1 -right-1 w-8 h-8 bg-blue-900 rounded-full flex items-center justify-center border-2 border-white shadow">
+        <Award className="w-4 h-4 text-white" />
+      </div>
+    </div>
+    <h4 className="font-bold text-gray-800 text-sm text-center">{name}</h4>
+    <p className="text-xs text-gray-500 text-center">{title}</p>
+  </div>
+);
+
 // --- 主應用程式 ---
 export default function Dashboard() {
   const [data, setData] = useState([]);
@@ -397,6 +420,74 @@ export default function Dashboard() {
           </div>
         </div>
       </header>
+
+      {/* Hero Section with Poster and Instructors */}
+      <section className="bg-gradient-to-br from-blue-900 via-blue-800 to-blue-900 relative overflow-hidden">
+        <div className="absolute inset-0 bg-grid-white/[0.05] bg-[size:20px_20px]"></div>
+        <div className="max-w-7xl mx-auto px-4 sm:px-6 lg:px-8 py-12 relative z-10">
+          <div className="grid grid-cols-1 lg:grid-cols-3 gap-8 items-center">
+            
+            {/* Left: Instructors */}
+            <div className="lg:col-span-1 order-2 lg:order-1">
+              <div className="bg-white/10 backdrop-blur-sm rounded-2xl p-6 border border-white/20">
+                <h3 className="text-white font-bold text-lg mb-6 flex items-center">
+                  <Users className="w-5 h-5 mr-2" />
+                  專業講師團隊
+                </h3>
+                <div className="space-y-6">
+                  <InstructorCard 
+                    name="王志中 教授" 
+                    title="品質管理專家"
+                    imagePath="./images/instructor1.jpg"
+                  />
+                  <InstructorCard 
+                    name="李建興 主任" 
+                    title="臨床技能中心主任"
+                    imagePath="./images/instructor2.jpg"
+                  />
+                  <InstructorCard 
+                    name="陳威宏 副主任" 
+                    title="感染管制專家"
+                    imagePath="./images/instructor3.jpg"
+                  />
+                </div>
+              </div>
+            </div>
+
+            {/* Right: Poster Image */}
+            <div className="lg:col-span-2 order-1 lg:order-2">
+              <div className="relative rounded-2xl overflow-hidden shadow-2xl border-4 border-white/20 group">
+                <img 
+                  src="./poster.jpg" 
+                  alt="ChiMeiRA 國際研討會海報"
+                  className="w-full h-auto object-cover group-hover:scale-105 transition-transform duration-500"
+                  onError={(e) => {
+                    e.target.src = 'https://via.placeholder.com/1200x800/1e3a8a/ffffff?text=ChiMeiRA+OSCE+Workshop';
+                  }}
+                />
+                <div className="absolute top-4 right-4 bg-yellow-500 text-blue-900 px-4 py-2 rounded-full font-bold text-sm shadow-lg">
+                  2025年度工作坊
+                </div>
+              </div>
+              <div className="mt-6 grid grid-cols-3 gap-4 text-center text-white">
+                <div className="bg-white/10 backdrop-blur-sm rounded-lg p-4 border border-white/20">
+                  <div className="text-2xl font-bold mb-1">4</div>
+                  <div className="text-xs opacity-80">核心主題</div>
+                </div>
+                <div className="bg-white/10 backdrop-blur-sm rounded-lg p-4 border border-white/20">
+                  <div className="text-2xl font-bold mb-1">跨域</div>
+                  <div className="text-xs opacity-80">合作學習</div>
+                </div>
+                <div className="bg-white/10 backdrop-blur-sm rounded-lg p-4 border border-white/20">
+                  <div className="text-2xl font-bold mb-1">永續</div>
+                  <div className="text-xs opacity-80">發展創新</div>
+                </div>
+              </div>
+            </div>
+
+          </div>
+        </div>
+      </section>
 
       <main className="max-w-7xl mx-auto px-4 sm:px-6 lg:px-8 py-8 space-y-8">
         
